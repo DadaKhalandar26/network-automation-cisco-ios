@@ -1,0 +1,15 @@
+---
+hostname {{ inventory_hostname }}
+!
+ip domain-name network-automation-core.com
+!
+ntp server 192.0.2.10
+ntp server 192.0.2.11
+!
+banner login ^
+***********************************************************************
+* Authorized Access Only                                              *
+* Managed by B S Dada Khalandar for Network Automation Core Project   *
+* Access is restricted and monitored                                  *
+***********************************************************************
+^
