@@ -1,0 +1,6 @@
+---
+ip access-list standard MGMT-ACL
+{% for subnet in mgmt_subnets %}
+ permit {{ subnet }}
+{% endfor %}
+ deny any
