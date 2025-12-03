@@ -1,0 +1,17 @@
+---
+- name: Cisco IOS Rollback to Saved Config
+  hosts: all
+  gather_facts: no
+  serial: 1
+  vars:
+    rollback_source: "{{ rollback_source | default('/tmp/rollback/{{ inventory_hostname }}.cfg') }}"
+  tasks:
+    - name: Fetch rollback config
+      slurp:
+        src: "{{ rollback_source }}"
+      register: rollback_cfg
+
+    - name: Restore running config
+      cisco.ios.ios_config:
+        src: /tmp/rollback-{{ inventory_hostname }}.cfg
+      when: rollback_cfg is defined
