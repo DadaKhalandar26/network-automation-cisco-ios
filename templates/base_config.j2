@@ -1,0 +1,5 @@
+---
+hostname {{ device_hostname }}
+ip domain-name example.com
+{% include 'ntp.j2' %}
+{% include 'banner.j2' %}
