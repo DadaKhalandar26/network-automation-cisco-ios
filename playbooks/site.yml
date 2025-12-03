@@ -1,0 +1,17 @@
+--- 
+name: Cisco IOS Apply (site)
+  hosts: all
+  gather_facts: no
+  serial: "{{ serial | default('10%') }}"   # pilot vs full rollout control
+  vars:
+    commit: "{{ commit | default(true) }}"
+    backup_before_change: "{{ backup_before_change | default(true) }}"
+  roles:
+    - role: vendor_abstraction
+      vars:
+        vendor_role_map:
+          cisco_ios: network-cisco-ios.roles.config
+  handlers:
+    - name: notify-post-apply
+      debug:
+        msg: "Post apply tasks completed for {{ inventory_hostname }}"
