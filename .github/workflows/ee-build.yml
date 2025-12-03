@@ -1,0 +1,17 @@
+---
+name: Build EE Image
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build EE image
+        run: |
+          podman build -f execution-environment.yml -t myorg/network-ee:latest
+          podman push myorg/network-ee:latest
