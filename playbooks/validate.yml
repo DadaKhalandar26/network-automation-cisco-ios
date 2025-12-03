@@ -1,0 +1,16 @@
+---
+- name: Cisco IOS Validate (check)
+  hosts: all
+  gather_facts: no
+  vars:
+    commit: false
+    backup_before_change: false
+  roles:
+    - role: vendor_abstraction
+      vars:
+        vendor_role_map:
+          cisco_ios: network-cisco-ios.roles.config
+  tasks:
+    - name: Run config validation only (no changes)
+      debug:
+        msg: "Validation completed for {{ inventory_hostname }}"
