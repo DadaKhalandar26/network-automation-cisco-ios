@@ -1,0 +1,20 @@
+---
+- name: Verify banner is present
+  cisco.ios.ios_command:
+    commands: show running-config | include Network Automation Core Project
+  register: banner_check
+
+- name: Assert banner exists
+  assert:
+    that:
+      - "'Network Automation Core Project' in banner_check.stdout[0]"
+
+- name: Verify NTP servers configured
+  cisco.ios.ios_command:
+    commands: show running-config | include ntp server
+  register: ntp_check
+
+- name: Assert NTP servers exist
+  assert:
+    that:
+      - "'192.0.2.20' in ntp_check.stdout[0]"
