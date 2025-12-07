@@ -16,10 +16,10 @@
     mode: '0644'
 
 - name: Compare running vs intended
-  community.general.compare:       
-    src: "/tmp/{{ inventory_hostname }}-intended.cfg"
-    dest: "/tmp/{{ inventory_hostname }}-running.cfg"
+  ansible.builtin.command:
+    cmd: diff /tmp/{{ inventory_hostname }}-intended.cfg /tmp/{{ inventory_hostname }}-running.cfg
   register: cfg_diff
+  changed_when: cfg_diff.rc != 0
 
 - name: Fail if drift detected
   ansible.builtin.fail:           
