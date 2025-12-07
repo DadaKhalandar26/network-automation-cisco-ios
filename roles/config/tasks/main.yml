@@ -28,5 +28,5 @@
 
 - name: Configure login banner from file
   ios_config:
-    src: banner.txt
+    src: banner.j2
     save_when: modified
