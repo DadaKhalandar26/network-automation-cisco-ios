@@ -26,7 +26,7 @@
 #     msg: "Compliance drift on {{ inventory_hostname }}: {{ cfg_diff.diff }}"
 #   when: cfg_diff.changed
 
-- name: Configure login banner from file
+- name: Configure login banner from template
   ios_config:
     src: banner.j2
     save_when: modified
