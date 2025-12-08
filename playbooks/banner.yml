@@ -2,24 +2,8 @@
 - name: Deploy login banner to Cisco IOS
   hosts: tenants_test-env
   gather_facts: no
-  vars:
-    banner_text: |
-      ***********************************************************************
-      *                                                                     *
-      *   WARNING: Authorized Access Only                                   *
-      *                                                                     *
-      *   This device is managed by                                         *
-      *   B S Dada Khalandar                                                *
-      *   for the Network Automation Core Project                           *
-      *                                                                     *
-      *   All connections are monitored and logged.                         *
-      *   Unauthorized access is strictly prohibited and may result in      *
-      *   disciplinary action or prosecution.                               *
-      *                                                                     *
-      ***********************************************************************
-  tasks:
-    - name: Configure login banner using ios_banner
-      cisco.ios.ios_banner:
-        banner: login
-        text: "{{ banner_text }}"
-        state: present
+  roles:
+    - role: config
+      vars:
+        banner_file: banner.j2
+        commit: true
