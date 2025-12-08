@@ -1,13 +1,13 @@
 ---
 # roles/vlan/tasks/main.yml
-- name: Fail if vlans variable is not defined or empty
-  ansible.builtin.fail:
-    msg: "The 'vlans' variable is not defined or is empty. Define it in defaults, group_vars, or pass it to the role."
-  when: vlans is not defined or vlans | length == 0
+# - name: Fail if vlans variable is not defined or empty
+#   ansible.builtin.fail:
+#     msg: "The 'vlans' variable is not defined or is empty. Define it in defaults, group_vars, or pass it to the role."
+#   when: vlans is not defined or vlans | length == 0
 
 - name: Render VLAN config from template into a variable
   ansible.builtin.set_fact:
-    vlans_cfg: "{{ lookup('template', 'vlans.j2') }}"
+    vlans_cfg: "{{ lookup('file', './templates/vlans.j2') }}"
   vars:
     ansible_python_interpreter: "{{ ansible_python_interpreter | default(omit) }}"
 
@@ -17,6 +17,18 @@
     backup: yes
     save_when: modified
   when: vlans_cfg is defined and vlans_cfg | length > 0
+
+# - name: Show backup path returned by module
+#   debug:
+#     var: ios_cfg_result.backup
+
+# - name: Copy backup from controller to persistent location (example)
+#   delegate_to: localhost
+#   ansible.builtin.copy:
+#     src: "{{ ios_cfg_result.backup }}"
+#     dest: "/srv/ansible_backups/{{ inventory_hostname }}-{{ ansible_date_time.iso8601 }}.cfg"
+#   when: ios_cfg_result.backup is defined
+
 
 - name: Verify VLAN configuration (show vlan brief)
   cisco.ios.ios_command:
@@ -28,3 +40,8 @@
 - name: Display VLAN verification output
   ansible.builtin.debug:
     var: vlan_show.stdout_lines
+
+
+- name: Render VLAN template to variable
+  set_fact:
+    vlans_cfg: "{{ lookup('template', 'vlans.j2') }}"
