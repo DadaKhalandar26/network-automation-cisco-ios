@@ -1,1 +1,2 @@
-
+# Default VLAN list (empty by default, override in host_vars/group_vars)
+vlans: []
