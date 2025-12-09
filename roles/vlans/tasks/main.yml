@@ -1,9 +1,10 @@
 ---
-# roles/vlan/tasks/main.yml
-# - name: Fail if vlans variable is not defined or empty
-#   ansible.builtin.fail:
-#     msg: "The 'vlans' variable is not defined or is empty. Define it in defaults, group_vars, or pass it to the role."
-#   when: vlans is not defined or vlans | length == 0
+#roles/vlan/tasks/main.yml
+- name: Fail if vlans variable is not defined or empty
+  ansible.builtin.fail:
+    msg: "The 'vlans' variable is not defined or is empty. Define it in defaults, group_vars, host-vars or pass it to the role."
+  when: vlans is not defined or vlans | length == 0
+
 - name: Render VLAN config from template into a variable
   ansible.builtin.set_fact:
     vlans_cfg: "{{ lookup('template', './templates/vlans.j2') }}"
