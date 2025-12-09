@@ -1,4 +1,4 @@
-{# roles/vlan/templates/vlans.j2 - renders VLAN CLI from variable 'vlans' #}
+# roles/vlan/templates/vlans.j2 - renders VLAN CLI from variable 'vlans' #
 {% for v in vlans %}
 {% set state = v.state | default('present') %}
 {% if state == 'present' %}
