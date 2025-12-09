@@ -1,0 +1,6 @@
+---
+domain_name: example.local
+admin_user: admin
+admin_pass: Cisco123!
+syslog_server: 192.168.1.100
+ntp_server: 192.168.1.200
