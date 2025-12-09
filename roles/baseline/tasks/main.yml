@@ -1,0 +1,37 @@
+---
+- name: Set hostname
+  ios_config:
+    lines:
+      - hostname {{ inventory_hostname }}
+
+- name: Configure domain name
+  ios_config:
+    lines:
+      - ip domain-name {{ domain_name }}
+
+- name: Configure login banner
+  ios_config:
+    lines: "{{ lookup('template', 'banner.j2') | splitlines }}"
+
+- name: Configure local admin user
+  ios_config:
+    lines:
+      - username {{ admin_user }} privilege 15 secret {{ admin_pass }}
+
+- name: Enable SSH and disable telnet
+  ios_config:
+    lines:
+      - line vty 0 4
+      - transport input ssh
+      - exec-timeout 10
+
+- name: Configure logging
+  ios_config:
+    lines:
+      - logging buffered 16384
+      - logging host {{ syslog_server }}
+
+- name: Configure NTP
+  ios_config:
+    lines:
+      - ntp server {{ ntp_server }}
