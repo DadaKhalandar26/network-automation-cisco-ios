@@ -2,6 +2,7 @@
 - name: Deploy VLANs via role to Cisco IOS
   hosts: tenants_test-env
   gather_facts: no
+  
   task:
     - name: Show vlans variable
       debug:
