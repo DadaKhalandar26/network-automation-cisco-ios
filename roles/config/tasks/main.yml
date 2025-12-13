@@ -4,6 +4,16 @@
     banner: login
     text: "{{ lookup('file', './templates/banner.j2') }}"
     state: present
+    
+- name: Set hostname
+  ios_config:
+    lines:
+      - hostname {{ inventory_hostname }}
+
+- name: Configure domain name
+  ios_config:
+    lines:
+      - ip domain-name {{ domain_name }}
 
 # - name: Render intended config
 #   ansible.builtin.template:        
