@@ -11,8 +11,8 @@ snmp-server community public RO {{ snmp_acl }}
 snmp-server community private RW {{ snmp_acl }}
 
 snmp-server enable traps syslog
-snmp-server enable traps aaa_server
-snmp-server enable traps cpu
+snmp-server enable traps ospf
+snmp-server enable traps ethernet
 snmp-server enable traps snmp
 
 {% for host in nms_hosts %}
