@@ -5,6 +5,7 @@ snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3 auth {{ snmp_auth_algo
 ip access-list standard {{ snmp_acl }}
  permit 10.10.40.0 0.0.0.255
  deny any log
+ exit
 
 snmp-server community public RO {{ snmp_acl }}
 snmp-server community private RW {{ snmp_acl }}
