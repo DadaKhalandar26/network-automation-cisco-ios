@@ -1,3 +1,8 @@
+ansible_connection: network_cli
+ansible_network_os: cisco.ios.ios
+ansible_command_timeout: 120
+ansible_timeout: 60
+ansible_port: 22
 snmp_group_name: NETOPS
 snmp_user: snmpadmin
 snmp_auth_algo: sha
