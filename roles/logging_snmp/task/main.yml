@@ -1,1 +1,7 @@
+- name: Configure SNMPv3 and logging
+  ios_config:
+    src: snmp.j2
 
+- name: Configure logging
+  ios_config:
+    src: logging.j2
