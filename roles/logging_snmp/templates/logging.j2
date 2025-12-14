@@ -1,0 +1,5 @@
+{% for loghost in logging_hosts %}
+logging host {{ loghost }}
+{% endfor %}
+logging trap informational
+logging source-interface E0/0
