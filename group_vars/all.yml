@@ -11,6 +11,7 @@ snmp_priv_algo: aes 256
 snmp_priv_key: StrongPrivKey
 snmp_view: READONLY
 snmp_acl: SNMP-ACL
+snmp_contact: B S Dada Kahalandar
 nms_hosts:
   - 10.10.40.100
   - 10.10.40.101
