@@ -2,5 +2,12 @@
 - name: Deploy SNMPv3 config
   hosts: tenants_test-env
   gather_facts: no
+  
   roles:
-    - logging_snmp
+    role:
+      - logging_snmp
+        vars:
+          template_file: 
+            - logging.j2
+            - snmp.j2
+          commit: true
