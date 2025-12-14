@@ -9,7 +9,6 @@ ip access-list standard {{ snmp_acl }}
 snmp-server community public RO {{ snmp_acl }}
 snmp-server community private RW {{ snmp_acl }}
 
-snmp-server enable traps
 snmp-server trap-authentication
 snmp-server trap linkdown
 snmp-server trap linkup
