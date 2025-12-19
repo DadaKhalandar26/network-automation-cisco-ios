@@ -7,7 +7,7 @@
       dir_path: /tmp
 
 - name: Upload backup to SFTP server
-  delegate_to: localhost
+  delegate_to: 192.168.29.125
   ansible.builtin.copy:
     src: "{{ backup_local_tmp }}"
     dest: "{{ backup_remote_dir }}/{{ inventory_hostname }}-{{ timestamp }}.cfg"
