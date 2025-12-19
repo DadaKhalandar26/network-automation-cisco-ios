@@ -7,7 +7,7 @@
       dir_path: /tmp
 
 - name: Upload backup to SFTP server
-  delegate_to: cloud
+  delegate_to: localhost
   ansible.builtin.command: >
     scp {{ backup_local_tmp }}
     {{ ansible_user }}@{{ backup_sftp_host }}:
