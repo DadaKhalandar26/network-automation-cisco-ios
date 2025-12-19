@@ -6,6 +6,7 @@
 
   vars_files:
     - "../group_vars/all.yml"
+    - "../host_vars/sftp-server.yml"
 
   vars:
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
