@@ -4,6 +4,9 @@
   gather_facts: no
   connection: network_cli
 
+  vars_files:
+    - "../group_vars/all.yml"
+
   vars:
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
     local_tmp: "/tmp/{{ inventory_hostname }}.cfg"
