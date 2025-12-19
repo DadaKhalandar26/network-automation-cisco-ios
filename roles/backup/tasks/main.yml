@@ -12,7 +12,7 @@
     dest: "/ios/backups/{{ inventory_hostname }}.cfg"
     mode: '0644'
     directory_mode: '0755'
-  delegate_to: "{{ groups['sftp'][0] }}"
+  delegate_to: sftp-server
 
 - name: Cleanup local temp file
   delegate_to: localhost
