@@ -1,11 +1,12 @@
 ---
-- name: Cisco IOS Backup Running Config
-  hosts: all
+- name: Backup Cisco IOS config to SFTP server
+  hosts: ios
   gather_facts: no
-  serial: 50
-  tasks:
-    - name: Run backup role
-      include_role:
-        name: network-cisco-ios.roles.backup
-      vars:
-        backup_location: "{{ backup_location | default('/tmp/backups') }}"
+  connection: network_cli
+
+  vars:
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
+    local_tmp: "/tmp/{{ inventory_hostname }}.cfg"
+
+  roles:
+      - backup
