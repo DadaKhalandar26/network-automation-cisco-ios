@@ -1,14 +1,23 @@
 ---
-- name: Gather running config
-  cisco.ios.ios_command:
-    commands: show running-config
-  register: running_cfg
+- name: Backup running config locally
+  cisco.ios.ios_config:
+    backup: yes
+    backup_options:
+      filename: "{{ inventory_hostname }}.cfg"
+      dir_path: /tmp
 
-- name: Save backup locally
-  copy:
-    content: "{{ running_cfg.stdout[0] }}"
-    dest: "{{ backup_location }}/{{ inventory_hostname }}-running-{{ ansible_date_time.iso8601 }}.cfg"
+- name: Upload backup to SFTP server
+  delegate_to: localhost
+  ansible.builtin.sftp:
+    src: "{{ local_tmp }}"
+    dest: "/ios/{{ inventory_hostname }}-{{ timestamp }}.cfg"
+    mode: put
+    username: backupuser
+    password: "{{ backup_sftp_password }}"
+    host: 192.168.29.125
 
-- name: Notify backup saved
-  debug:
-    msg: "Backup saved for {{ inventory_hostname }} at {{ backup_location }}"
+- name: Cleanup local temp file
+  delegate_to: localhost
+  file:
+    path: "{{ local_tmp }}"
+    state: absent
