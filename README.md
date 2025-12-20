@@ -129,10 +129,8 @@ network-cisco-ios/
 
 └── docs/
 
-    ├── awx-workflows.md
-    
+    ├── awx-workflows.md\    
     ├── rollback-policy.md
-    
     └── audit-policy.md
 
 # Design Principles
