@@ -6,7 +6,7 @@ The solution supports safe configuration changes, pre-change backups, approval-b
 
 # Scope
 
-This repository is Cisco IOS only.
+This repository is for Cisco IOS only.
 
 Supported capabilities:
 
