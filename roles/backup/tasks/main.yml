@@ -1,21 +1,25 @@
 ---
-- name: Backup running config locally
+- name: Backup running config locally on AWX node
   cisco.ios.ios_config:
     backup: yes
     backup_options:
-      filename: "{{ inventory_hostname }}.cfg"
+      filename: "{{ inventory_hostname }}-{{ backup_timestamp }}.cfg"
       dir_path: /tmp
+  register: backup_result
 
-- name: Upload backups to SFTP
-  ansible.builtin.copy:
-    src: "/tmp/{{ inventory_hostname }}.cfg"
-    dest: "/ios/backups/{{ inventory_hostname }}.cfg"
-    mode: '0644'
-    directory_mode: '0755'
-  delegate_to: sftp-server
-
-- name: Cleanup local temp file
+- name: Upload config to SFTP server
+  ansible.builtin.expect:
+    command: >
+      sftp {{ sftp_username }}@{{ sftp_host }}:/ios/
+    responses:
+      (?i)password: "{{ sftp_password }}"
+      sftp>:
+        - "put {{ backup_result.backup_path }}"
+        - "bye"
   delegate_to: localhost
-  file:
-    path: "{{ backup_local_tmp }}"
+
+- name: Cleanup local backup file
+  ansible.builtin.file:
+    path: "{{ backup_result.backup_path }}"
     state: absent
+  delegate_to: localhost
