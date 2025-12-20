@@ -22,6 +22,7 @@ Real storage path on SFTP server:
 
 # Backup File Naming Convention
 Each backup file is saved using the format:
+
 <inventory_hostname>-<backup_timestamp>.cfg
 
 Example:
