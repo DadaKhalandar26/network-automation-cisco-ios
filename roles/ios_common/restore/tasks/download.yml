@@ -15,23 +15,26 @@
   register: sftp_list
   delegate_to: localhost
 
-- name: Normalize SFTP file list into one filename per item
+# Extract only .cfg files (ignore all other garbage)
+- name: Extract only .cfg files from SFTP output
   set_fact:
-    sftp_files: >-
-      {{ sftp_list.stdout_lines
-         | map('split')
-         | list
-         | sum(start=[]) }}
+    sftp_cfg_files: >-
+      {{
+        sftp_list.stdout_lines
+        | select('search', '\\.cfg$')
+        | list
+      }}
 
+# Select the latest backup for this device
 - name: Extract latest backup filename
   set_fact:
     latest_backup: >-
-      {{ sftp_files
-         | select('match', inventory_hostname)
-         | select('match', '\\.cfg$')
-         | list
-         | sort
-         | last }}
+      {{
+        sftp_cfg_files
+        | select('match', inventory_hostname)
+        | sort
+        | last
+      }}
 
 - name: Fail if no backup exists
   fail:
