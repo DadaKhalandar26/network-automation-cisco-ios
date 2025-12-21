@@ -1,11 +1,11 @@
 ---
-- name: List of backup files on SFTP server
+- name: List backup files on SFTP server
   ansible.builtin.expect:
     command: >
       sftp
       -o StrictHostKeyChecking=no
       -o UserKnownHostsFile=/dev/null
-      {{ sftp_username }}@{{ sftp_host }}:
+      {{ sftp_username }}@{{ sftp_host }}
     responses:
       (?i)password: "{{ sftp_password }}"
       sftp>:
@@ -17,12 +17,13 @@
 
 - name: Extract latest backup filename
   set_fact:
-    latest_backup: "{{ sftp_list.stdout_lines
-                       | select('match', inventory_hostname)
-                       | select('match', '\\.cfg$')
-                       | list
-                       | sort
-                       | last }}"
+    latest_backup: >-
+      {{ sftp_list.stdout_lines
+         | select('match', inventory_hostname)
+         | select('match', '\\.cfg$')
+         | list
+         | sort
+         | last }}
 
 - name: Fail if no backup exists
   fail:
@@ -35,7 +36,7 @@
       sftp
       -o StrictHostKeyChecking=no
       -o UserKnownHostsFile=/dev/null
-      {{ sftp_username }}@{{ sftp_host }}:
+      {{ sftp_username }}@{{ sftp_host }}
     responses:
       (?i)password: "{{ sftp_password }}"
       sftp>:
