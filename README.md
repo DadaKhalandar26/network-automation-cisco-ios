@@ -23,16 +23,18 @@ Supported capabilities:
     ├── README.md
     │
     ├── inventories/
-    │   ├── prod.yml
-    │   └── lab.yml
+    │   ├── netbox_inventory.yml
+    │   └── example.yml
     │
     ├── playbooks/
     │   ├── ios_backup.yml
     │   ├── ios_restore.yml
+    │   ├── ios_banner.yml
+    │   ├── ios_baseline.yml
     │   ├── vlan_apply.yml
-    │   ├── vlan_rollback.yml
+    │   ├── vlan_manula_rollback.yml
     │   ├── interface_apply.yml
-    │   ├── interface_rollback.yml
+    │   ├── interface_manual_rollback.yml
     │   ├── drift_detect.yml
     │   ├── drift_remediate.yml
     │   └── compliance_check.yml
@@ -46,6 +48,7 @@ Supported capabilities:
     │   │
     │   ├── vlan/
     │   │   └── tasks/
+    │   │       ├── main.yml
     │   │       ├── precheck.yml
     │   │       ├── apply.yml
     │   │       ├── verify.yml
