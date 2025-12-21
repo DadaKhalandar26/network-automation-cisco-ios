@@ -207,9 +207,8 @@ Example
 - NOC / Operations Teams
 - Platform and Infrastructure Engineers
 
-# Author
-Bandar Shaik Dada Khalandar
-
+## Author
+**Bandar Shaik Dada Khalandar**
 Senior Network Engineer
 
 # License
