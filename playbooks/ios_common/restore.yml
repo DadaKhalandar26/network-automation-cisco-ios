@@ -1,6 +1,6 @@
 ---
 - name: Restore Cisco IOS configuration from latest backup
-  hosts: all
+  hosts: Test-IOS-XE-ISRV
   gather_facts: no
   connection: network_cli
 
@@ -9,3 +9,4 @@
 
   roles:
     - role: ios_common/restore
+
