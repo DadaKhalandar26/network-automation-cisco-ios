@@ -1,22 +1,30 @@
-# network-cisco-ios
+# network-automation-cisco-ios
 
-This repository provides production-ready network automation for Cisco IOS devices, designed to run on AWX / Ansible Automation Platform with enterprise change-management practices.
+This repository provides production-ready network automation for Cisco IOS and Cisco IOS-XE platforms, designed to run on AWX / Ansible Automation Platform and aligned with enterprise change-management and governance practices.
 
-The solution supports safe configuration changes, pre-change backups, approval-based workflows, automatic rollback, configuration drift handling, and audit evidence generation.
+The solution enables safe, auditable, and controlled network changes by combining pre-change validation, automated backups, approval-based workflows, rollback mechanisms, configuration drift handling, and audit evidence generation.
+
+The repository is designed to be future-proof, allowing additional Cisco IOS-XE capabilities to be introduced without restructuring core automation logic.
 
 # Scope
 
-This repository is for Cisco IOS only.
+This repository supports Cisco IOS and Cisco IOS-XE devices.
 
-Supported capabilities:
+The design treats IOS-XE as a modern evolution of IOS, sharing a common automation baseline while isolating IOS-XE-specific capabilities to dedicated workflows and roles.
 
-- Cisco IOS configuration backups (SFTP)
-- Controlled configuration changes (VLANs, interfaces, banners)
-- Manual and automatic rollback
+### Supported Capabilities
+- Cisco IOS / IOS-XE configuration backups (SFTP-based)
+- Controlled configuration changes:
+        - VLANs
+        - Interfaces
+        - Banners
+        - Baseline configurations
+- Manual and automatic rollback mechanisms
 - Configuration drift detection and remediation
 - CRQ / Change ID–based traceability
 - AWX workflow approvals (CAB / Change Management)
-- Audit and diff capture for compliance
+- Audit logging and configuration diff capture for compliance
+- Platform-aware execution for IOS-XE–specific features (upgrade, NETCONF, RESTCONF)
 
 # Repository Structure
         network-automation-cisco-ios/
@@ -122,54 +130,56 @@ Supported capabilities:
         └── .gitignore
 
 # Design Principles
-- Playbooks define intent
-- Roles contain device logic
-- AWX workflows enforce governance
+- Playbooks define intent, not device-specific logic
+- Roles encapsulate platform logic and execution steps
+- IOS and IOS-XE share a common automation baseline
+- IOS-XE–specific capabilities are explicitly isolated
+- AWX or Ansible Automation platform workflows enforce governance and approvals\
 - Rollback always restores a known-good state
 - Every change produces audit evidence
-
-This structure aligns with enterprise automation and ITIL-based change management.
+This design aligns with enterprise automation standards, ITIL-based change management, and production operational safety.
 
 # Role Execution Model
 
-Roles are executed using tasks/main.yml as the controller file.
+Roles use tasks/main.yml as the orchestration entry point.
 
-Example for the VLAN role:
+Example – VLAN Role
+        
+        import_tasks: precheck.yml
+        import_tasks: apply.yml
+        import_tasks: verify.yml
+        import_tasks: audit.yml
 
-roles/vlan/tasks/main.yml
-
-- import_tasks: precheck.yml
-- import_tasks: apply.yml
-- import_tasks: verify.yml
-- import_tasks: audit.yml
-
-Rollback logic is intentionally separated and executed only via:
+Rollback logic is intentionally excluded from the default execution path and is triggered only through:
 
 - A dedicated rollback playbook
-- An AWX workflow failure path
-- Manual operator action
+- An AWX or Ansible Automation platform workflow failure path
+- Explicit manual operator action
+
+This prevents unintended rollback execution during normal change workflows.
 
 # Playbook Usage
 Apply VLAN Configuration
 
-playbooks/vlan_apply.yml
+        playbooks/vlan_apply.yml
 
-Rollback VLAN Configuration
+Manual VLAN Rollback
 
-playbooks/vlan_rollback.yml
+        playbooks/vlan_manual_rollback.yml
+
+IOS-XE Platform Operations
+
+        playbooks/ios_xe_only/upgrade.yml
 
 # Backup and Audit Storage
-
-- Pre-change backups stored on SFTP
-- Audit diffs generated per device
+- Pre-change backups stored on SFTP servers
+- Audit diffs generated per device and change
 - Chrooted SFTP environments supported
-- Files are tagged using hostname and CRQ ID
+- Files tagged using hostname and CRQ ID
+Example
 
-Example:
-
-Test-IOS-01-CRQ-2025-00123-pre.cfg
-
-Test-IOS-01-CRQ-2025-00123-vlan-diff.txt
+        Test-IOS-01-CRQ-2025-00123-pre.cfg
+        Test-IOS-01-CRQ-2025-00123-vlan-diff.txt
 
 # Configuration Drift Management
 
@@ -179,20 +189,21 @@ Test-IOS-01-CRQ-2025-00123-vlan-diff.txt
 
 # Security Considerations
 - No credentials stored in Git
-- All secrets managed in AWX credentials
-- Device access via Machine credentials
-- Backup access via custom SFTP credentials
-- Rollback restores full configuration state (will work on more to optimize it.)
+- All secrets managed via AWX credentials
+- Device access via AWX Machine credentials
+- Backup access via dedicated SFTP credentials
+- Rollback restores known configuration state (continuous optimization planned)
 
 # Supported Execution Platform
 - AWX
 - Ansible Automation Platform
-- Cisco IOS devices (SSH / network_cli)
+- Cisco IOS and IOS-XE devices (SSH / network_cli)
 
 # Intended Audience
 - Network Engineers
 - Automation Engineers
 - NOC / Operations Teams
+- Platform and Infrastructure Engineers
 
 # Author
 Bandar Shaik Dada Khalandar
