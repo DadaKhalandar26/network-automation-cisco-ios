@@ -1,4 +1,3 @@
-# try pattern first
 - name: List hostname-specific files on SFTP
   ansible.builtin.expect:
     command: >
@@ -13,13 +12,57 @@
   register: sftp_list
   delegate_to: localhost
 
-# if no .cfg lines returned, fall back to full ls
-- name: Fallback to full listing if pattern returned nothing
+- name: Extract lines that contain .cfg
   set_fact:
-    need_full_list: "{{ (sftp_list.stdout_lines | select('search','\\.cfg$') | list) | length == 0 }}"
+    sftp_cfg_lines: >-
+      {{ sftp_list.stdout_lines | select('search', '\\.cfg$') | list }}
 
-- name: Full listing fallback
-  when: need_full_list
+- name: Split lines into individual filenames and normalize
+  set_fact:
+    sftp_cfg_files: >-
+      {{
+        sftp_cfg_lines
+        | map('split')            # split multi-column lines into words
+        | list
+        | sum(start=[])           # flatten list of lists
+        | map('trim')             # remove surrounding whitespace
+        | reject('equalto', '')   # drop empty tokens
+        | list
+      }}
+
+- name: Debug file list
+  debug:
+    var: sftp_cfg_files
+
+- name: Select latest backup matching this host
+  set_fact:
+    latest_backup: >-
+      {{
+        (sftp_cfg_files
+         | select('search', inventory_hostname)   # substring match
+         | sort
+         | list
+         | last) | default('')
+      }}
+
+- name: If no hostname match, optionally select most recent overall
+  set_fact:
+    latest_backup: >-
+      {{
+        (latest_backup if latest_backup != ''
+         else (sftp_cfg_files | sort | last | default('')))
+      }}
+
+- name: Fail if no backup exists
+  fail:
+    msg: "No backup found for {{ inventory_hostname }} on SFTP server; sftp_cfg_files={{ sftp_cfg_files }}"
+  when: latest_backup == ""
+
+- name: Debug selected backup
+  debug:
+    msg: "Selected latest backup: {{ latest_backup }}"
+
+- name: Download latest backup file
   ansible.builtin.expect:
     command: >
       sftp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
@@ -28,29 +71,6 @@
       (?i)password: "{{ sftp_password }}"
       sftp>:
         - "cd /ios/backups/"
-        - "ls"
+        - "get {{ latest_backup }} /tmp/{{ latest_backup }}"
         - "bye"
-  register: sftp_list
   delegate_to: localhost
-
-# normalize and split multi-column output, then filter .cfg and hostname
-- name: Build file list
-  set_fact:
-    sftp_cfg_files: >-
-      {{
-        (sftp_list.stdout_lines
-         | select('search','\\.cfg$')
-         | map('split')
-         | list
-         | sum(start=[]))
-      }}
-
-- name: Select latest backup for this device
-  set_fact:
-    latest_backup: >-
-      {{
-        sftp_cfg_files
-        | select('match', inventory_hostname)
-        | sort
-        | last
-      }}
