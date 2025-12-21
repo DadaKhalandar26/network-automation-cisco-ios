@@ -1,0 +1,18 @@
+---
+- name: Check device reachability
+  cisco.ios.ios_command:
+    commands: ["show version"]
+  register: device_reachable
+  failed_when: device_reachable.failed
+
+- name: Check SFTP server reachability
+  ansible.builtin.command: "ping -c 2 {{ sftp_host }}"
+  register: sftp_ping
+  delegate_to: localhost
+  failed_when: sftp_ping.rc != 0
+
+- name: Ensure /tmp directory exists on AWX node
+  ansible.builtin.file:
+    path: "/tmp"
+    state: directory
+  delegate_to: localhost

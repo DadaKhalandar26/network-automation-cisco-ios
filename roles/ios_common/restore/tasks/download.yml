@@ -1,0 +1,43 @@
+---
+- name: List of backup files on SFTP server
+  ansible.builtin.expect:
+    command: >
+      sftp
+      -o StrictHostKeyChecking=no
+      -o UserKnownHostsFile=/dev/null
+      {{ sftp_username }}@{{ sftp_host }}:/ios/backups/
+    responses:
+      (?i)password: "{{ sftp_password }}"
+      sftp>:
+        - "ls"
+        - "bye"
+  register: sftp_list
+  delegate_to: localhost
+
+- name: Extract latest backup filename
+  set_fact:
+    latest_backup: "{{ sftp_list.stdout_lines
+                       | select('match', inventory_hostname)
+                       | select('match', '\\.cfg$')
+                       | list
+                       | sort
+                       | last }}"
+
+- name: Fail if no backup exists
+  fail:
+    msg: "No backup found for {{ inventory_hostname }} on SFTP server"
+  when: latest_backup is not defined or latest_backup == ""
+
+- name: Download latest backup file
+  ansible.builtin.expect:
+    command: >
+      sftp
+      -o StrictHostKeyChecking=no
+      -o UserKnownHostsFile=/dev/null
+      {{ sftp_username }}@{{ sftp_host }}:/ios/backups/
+    responses:
+      (?i)password: "{{ sftp_password }}"
+      sftp>:
+        - "get {{ latest_backup }} /tmp/{{ latest_backup }}"
+        - "bye"
+  delegate_to: localhost

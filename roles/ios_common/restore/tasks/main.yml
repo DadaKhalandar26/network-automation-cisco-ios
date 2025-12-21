@@ -1,0 +1,19 @@
+---
+- name: Prechecks before restore
+  import_tasks: precheck.yml
+
+- name: Download latest backup from SFTP
+  import_tasks: download.yml
+
+- name: Apply configuration restore
+  import_tasks: apply.yml
+
+- name: Verify restore success
+  import_tasks: verify.yml
+
+- name: Rollback if verification failed
+  import_tasks: rollback.yml
+  when: restore_failed | default(false)
+
+- name: Cleanup temporary files
+  import_tasks: cleanup.yml

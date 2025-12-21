@@ -1,0 +1,11 @@
+---
+- name: Apply configuration restore
+  cisco.ios.ios_config:
+    src: "/tmp/{{ latest_backup }}"
+    replace: config
+  register: restore_result
+
+- name: Save running-config to startup-config
+  cisco.ios.ios_command:
+    commands:
+      - write memory

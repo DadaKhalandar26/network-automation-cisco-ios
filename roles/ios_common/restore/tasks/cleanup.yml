@@ -1,0 +1,6 @@
+---
+- name: Remove downloaded backup file
+  ansible.builtin.file:
+    path: "/tmp/{{ latest_backup }}"
+    state: absent
+  delegate_to: localhost

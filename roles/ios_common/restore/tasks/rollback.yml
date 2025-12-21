@@ -1,0 +1,10 @@
+---
+- name: Rollback to previous config (backup before restore)
+  cisco.ios.ios_config:
+    src: "/tmp/{{ latest_backup }}"
+    replace: config
+
+- name: Save rollback config
+  cisco.ios.ios_command:
+    commands:
+      - write memory

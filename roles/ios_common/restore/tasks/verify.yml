@@ -1,0 +1,11 @@
+---
+- name: Verify device is reachable after restore
+  cisco.ios.ios_command:
+    commands: ["show running-config | include hostname"]
+  register: verify_output
+  failed_when: verify_output.failed
+
+- name: Check if hostname still matches expected
+  set_fact:
+    restore_failed: true
+  when: "'{{ inventory_hostname }}' not in verify_output.stdout[0]"
