@@ -20,37 +20,17 @@
 - name: Split lines into individual filenames and normalize
   set_fact:
     sftp_cfg_files: >-
-      {{
-        sftp_cfg_lines
-        | map('split')            # split multi-column lines into words
-        | list
-        | sum(start=[])           # flatten list of lists
-        | map('trim')             # remove surrounding whitespace
-        | reject('equalto', '')   # drop empty tokens
-        | list
-      }}
+      {{ (sftp_cfg_lines | map('split') | list | sum(start=[]) | map('trim') | reject('equalto', '') | list) }}
 
-- name: Debug file list
-  debug:
-    var: sftp_cfg_files
-
-- name: Select latest backup matching this host
+- name: Select latest backup matching this host (fallback to most recent overall)
   set_fact:
     latest_backup: >-
       {{
-        (sftp_cfg_files
-         | select('search', inventory_hostname)   # substring match
-         | sort
-         | list
-         | last) | default('')
-      }}
-
-- name: If no hostname match, optionally select most recent overall
-  set_fact:
-    latest_backup: >-
-      {{
-        (latest_backup if latest_backup != ''
-         else (sftp_cfg_files | sort | last | default('')))
+        (
+          (sftp_cfg_files | select('search', inventory_hostname) | sort | list | last)
+          if (sftp_cfg_files | select('search', inventory_hostname) | list | length) > 0
+          else (sftp_cfg_files | sort | list | last | default(''))
+        )
       }}
 
 - name: Fail if no backup exists
