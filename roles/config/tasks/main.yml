@@ -13,7 +13,7 @@
 - name: Configure domain name
   ios_config:
     lines:
-      - ip domain-name {{ domain_name }}
+      - ip domain name {{ domain_name }}
 
 # - name: Render intended config
 #   ansible.builtin.template:        
