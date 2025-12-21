@@ -1,12 +1,8 @@
 ---
 - name: Backup Cisco IOS config to SFTP server
-  hosts: tenants_test-env
+  hosts: 	Test-IOS-XE-ISRV
   gather_facts: no
   connection: network_cli
-
-  vars_files:
-    - "../group_vars/all.yml"
-    - "../host_vars/sftp-server.yml"
 
   vars:
     ansible_network_os: cisco.ios.ios
