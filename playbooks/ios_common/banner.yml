@@ -9,7 +9,7 @@
     ansible_network_os: cisco.ios.ios
   
   roles:
-    - role: config
+    - role: common_ios/banner
       vars:
         banner_file: banner.j2
         commit: true
