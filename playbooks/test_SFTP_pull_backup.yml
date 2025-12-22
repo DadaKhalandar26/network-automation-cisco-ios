@@ -1,0 +1,69 @@
+---
+- name: Pull latest backup for the target host
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Ensure local download directory exists
+      file:
+        path: /tmp/
+        state: directory
+        mode: '0755'
+
+    - name: List backup files on SFTP
+      ansible.builtin.command: >
+        sshpass -p "{{ sftp_password }}"
+        sftp -oBatchMode=no -oStrictHostKeyChecking=no
+        {{ sftp_username }}@{{ sftp_host }}:/ios/backups/
+      register: sftp_list_raw
+      changed_when: false
+
+    - name: Extract only .cfg files
+      set_fact:
+        sftp_files: "{{ sftp_list_raw.stdout_lines | select('match', '.*\\.cfg$') | list }}"
+
+    - name: Filter files belonging to this host
+      set_fact:
+        host_backup_files: >-
+          {{ sftp_files
+             | select('match', inventory_hostname ~ '.*-[0-9]{8}-[0-9]{6}\\.cfg$')
+             | list }}
+
+    - name: Fail if no backup files found for this host
+      fail:
+        msg: "No backup files found on SFTP for host {{ inventory_hostname }}!"
+      when: host_backup_files | length == 0
+
+    - name: Sort and select latest backup file
+      set_fact:
+        latest_backup: "{{ host_backup_files | sort | last }}"
+
+    - name: Download latest backup file
+      ansible.builtin.command: >
+        sshpass -p "{{ sftp_password }}"
+        sftp -oBatchMode=no -oStrictHostKeyChecking=no
+        {{ sftp_username }}@{{ sftp_host }}:/ios/backups/{{ latest_backup }}
+        /tmp/
+      register: download_status
+      changed_when: "'Fetching' in download_status.stdout"
+
+    - name: Validate backup file (placeholder)
+      debug:
+        msg:
+          - "Backup file downloaded for validation."
+          - "File: {{ tmp_path }}/{{ latest_backup }}"
+          - "You can add checksum, size check, or syntax validation here."
+
+    - name: Delete backup file after validation
+      file:
+        path: "{{ tmp_path }}/{{ latest_backup }}"
+        state: absent
+
+    - name: Status summary
+      debug:
+        msg:
+          - "Backup retrieval and cleanup completed successfully."
+          - "Host: {{ inventory_hostname }}"
+          - "Latest backup file was: {{ latest_backup }}"
+          - "Temporary file removed from: {{ tmp_path }}"
+
