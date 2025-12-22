@@ -62,7 +62,7 @@
 
 - name: Normalize hostname (strip FQDN + lowercase)
   set_fact:
-    host_prefix: "{{ inventory_hostname.split('.')[0] | lower }}"
+    host_prefix: "{{ inventory_hostname.split('.')[0] | lower | regex_replace('-', '\\-') }}"
 
 - name: Lowercase filenames for case-insensitive matching
   set_fact:
