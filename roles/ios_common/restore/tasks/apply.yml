@@ -45,7 +45,7 @@
 - name: Copy backup file to device flash using HTTP
   cisco.ios.ios_command:
     commands:
-      - "copy http://{{ controller_ip }}:8080/{{ backup_filename }} bootflash:{{ backup_filename }} /quiet"
+      - "copy http://{{ controller_ip }}:8080/{{ backup_filename }} bootflash:{{ backup_filename }}"
   vars:
     ansible_command_timeout: 300
   register: http_copy
