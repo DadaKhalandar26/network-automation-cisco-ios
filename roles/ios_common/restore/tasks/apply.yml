@@ -2,13 +2,12 @@
 # roles/ios_common/restore/tasks/apply.yml
 
 # ============================================================
-# STEP 0 — Detect controller IP automatically
+# STEP 0 — controller IP
 # ============================================================
 
-- name: Detect controller IP automatically
+- name: Set controller_ip manually
   set_fact:
-    controller_ip: "{{ ansible_default_ipv4.address }}"
-  delegate_to: localhost
+    controller_ip: "192.168.29.51"
 
 # ============================================================
 # STEP 1 — Prepare HTTP-serving directory on controller
