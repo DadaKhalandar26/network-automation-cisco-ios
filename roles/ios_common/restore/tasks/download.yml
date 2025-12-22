@@ -20,7 +20,7 @@
   delegate_to: localhost
 
 - name: If ls -1 returned nothing, fallback to plain ls
-  when: (sftp_list.stdout | default('') | trim) == ''
+  when: ( sftp_list.stdout_lines | default('') | trim) == ''
   ansible.builtin.expect:
     command: >
       sftp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
@@ -35,7 +35,7 @@
 
 - name: Debug raw sftp stdout (string)
   debug:
-    var: sftp_list.stdout
+    var: sftp_list.stdout_lines
 
 - name: Normalize stdout_lines structure (flatten nested lists)
   set_fact:
