@@ -20,7 +20,7 @@
   delegate_to: localhost
 
 - name: If ls -1 returned nothing, fallback to plain ls
-  when: ( sftp_list.stdout_lines | default('') | trim) == ''
+  when: (sftp_list.stdout_lines | default([]) | length) == 0
   ansible.builtin.expect:
     command: >
       sftp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
@@ -33,15 +33,19 @@
   register: sftp_list
   delegate_to: localhost
 
-- name: Debug raw sftp stdout (string)
+- name: Debug raw sftp stdout_lines
   debug:
     var: sftp_list.stdout_lines
 
-- name: Normalize stdout_lines structure (flatten nested lists)
-  set_fact:
-    sftp_raw_lines: "{{ (sftp_list.stdout_lines | default([]) | sum(start=[])) | list }}"
+# -------------------------------
+# NORMALIZE OUTPUT
+# -------------------------------
 
-- name: Flatten lines into tokens (handles multi-column ls)
+- name: Flatten stdout_lines into a clean list
+  set_fact:
+    sftp_raw_lines: "{{ sftp_list.stdout_lines | default([]) | sum(start=[]) }}"
+
+- name: Clean tokens (handles multi-column ls)
   set_fact:
     sftp_tokens: >-
       {{ (sftp_raw_lines
@@ -52,7 +56,7 @@
           | reject('equalto','')
           | list) }}
 
-- name: Keep only tokens that look like .cfg files
+- name: Keep only .cfg files
   set_fact:
     sftp_cfg_files: "{{ sftp_tokens | select('search','\\.cfg$') | list }}"
 
@@ -64,7 +68,7 @@
       - "cfg_files={{ sftp_cfg_files }}"
 
 # -------------------------------
-# FIXED SECTION: STRICT FILTERING
+# STRICT HOST FILTERING
 # -------------------------------
 
 - name: Find files that belong to this host (strict pattern)
@@ -81,7 +85,7 @@
       - "Matching files for host={{ inventory_hostname }}"
       - "{{ matching_files }}"
 
-- name: Select latest backup (strict host match only)
+- name: Select latest backup
   set_fact:
     latest_backup: "{{ matching_files | sort | last | default('') }}"
 
@@ -91,7 +95,7 @@
 
 - name: Fail if no backup exists
   fail:
-    msg: "No backup found for {{ inventory_hostname }} on SFTP server; sftp_cfg_files={{ sftp_cfg_files }}"
+    msg: "No backup found for {{ inventory_hostname }} on SFTP server."
   when: latest_backup == ""
 
 # -------------------------------
