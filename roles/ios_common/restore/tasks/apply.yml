@@ -2,13 +2,13 @@
 - name: Enable SFTP server on device
   cisco.ios.ios_config:
     lines:
-      - ip sftp server enable
+      - ip scp server enable
 
 - name: Upload backup file to device flash
   cisco.ios.ios_file:
     src: "{{ backup_full_path }}"
     dest: "flash:{{ backup_filename }}"
-    protocol: sftp
+    protocol: scp
   vars:
     ansible_command_timeout: 120
 
