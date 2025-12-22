@@ -11,14 +11,16 @@
 # ---------------------------------------------------------
 
 - name: List backup files on SFTP server (AWX-safe batch mode)
-  ansible.builtin.command: >
-    bash -c "sshpass -p '{{ sftp_password }}'
-    sftp -oBatchMode=no -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null
-    {{ sftp_username }}@{{ sftp_host }} << 'EOF'
+  ansible.builtin.command: |
+    sshpass -p "{{ sftp_password }}" sftp \
+      -oBatchMode=no \
+      -oStrictHostKeyChecking=no \
+      -oUserKnownHostsFile=/dev/null \
+      {{ sftp_username }}@{{ sftp_host }} <<EOF
     cd {{ sftp_path | default('/ios/backups/') }}
     ls -1
     bye
-EOF"
+EOF
   register: sftp_list
   delegate_to: localhost
   changed_when: false
@@ -97,14 +99,16 @@ EOF"
 # ---------------------------------------------------------
 
 - name: Download latest backup file (AWX-safe batch mode)
-  ansible.builtin.command: >
-    bash -c "sshpass -p '{{ sftp_password }}'
-    sftp -oBatchMode=no -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null
-    {{ sftp_username }}@{{ sftp_host }} << 'EOF'
+  ansible.builtin.command: |
+    sshpass -p "{{ sftp_password }}" sftp \
+      -oBatchMode=no \
+      -oStrictHostKeyChecking=no \
+      -oUserKnownHostsFile=/dev/null \
+      {{ sftp_username }}@{{ sftp_host }} <<EOF
     cd {{ sftp_path | default('/ios/backups/') }}
     get {{ latest_backup }} {{ download_dest_dir | default('/tmp') }}/{{ latest_backup }}
     bye
-EOF"
+EOF
   register: download_status
   delegate_to: localhost
   changed_when: "'Fetching' in download_status.stdout"
