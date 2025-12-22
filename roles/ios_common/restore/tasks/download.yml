@@ -7,7 +7,7 @@
   delegate_to: localhost
 
 # ---------------------------------------------------------
-# STEP 1 — LIST FILES (AWX-SAFE, NON-INTERACTIVE SFTP)
+# STEP 1 — LIST FILES (AWX-SAFE, NO HEREDOC)
 # ---------------------------------------------------------
 
 - name: List backup files on SFTP server (AWX-safe, no heredoc)
@@ -57,26 +57,30 @@
       - "cfg_files={{ sftp_cfg_files }}"
 
 # ---------------------------------------------------------
-# STEP 3 — STRICT HOST FILTERING
+# STEP 3 — RELAXED, CASE-INSENSITIVE HOST FILTERING
 # ---------------------------------------------------------
 
-- name: Find files that belong to this host (strict pattern)
+- name: Normalize hostname (strip FQDN)
+  set_fact:
+    host_prefix: "{{ inventory_hostname.split('.')[0] }}"
+
+- name: Find files that belong to this host (case-insensitive)
   set_fact:
     matching_files: >-
       {{ sftp_cfg_files
-         | select('match',
-                  '^' ~ inventory_hostname ~ '-.*-[0-9]{8}-[0-9]{6}\\.cfg$')
+         | select('search',
+                  '(?i)^' ~ host_prefix ~ '.*-[0-9]{8}-[0-9]{6}\\.cfg$')
          | list }}
 
 - name: Debug matching files
   debug:
     msg:
-      - "Matching files for host={{ inventory_hostname }}"
-      - "{{ matching_files }}"
+      - "Host prefix={{ host_prefix }}"
+      - "Matching files={{ matching_files }}"
 
 - name: Fail if no backup exists
   fail:
-    msg: "No backup found for {{ inventory_hostname }} on SFTP server."
+    msg: "No backup found for {{ inventory_hostname }} (prefix={{ host_prefix }}) on SFTP server."
   when: matching_files | length == 0
 
 # ---------------------------------------------------------
@@ -92,7 +96,7 @@
     msg: "Selected latest backup: {{ latest_backup }}"
 
 # ---------------------------------------------------------
-# STEP 5 — DOWNLOAD THE FILE (NO EOF)
+# STEP 5 — DOWNLOAD THE FILE (NO HEREDOC)
 # ---------------------------------------------------------
 
 - name: Download latest backup file (AWX-safe, no heredoc)
