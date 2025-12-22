@@ -64,16 +64,15 @@
   set_fact:
     host_prefix: "{{ inventory_hostname.split('.')[0] | lower }}"
 
-- name: Convert cfg_files to dict list for safe filtering
+- name: Lowercase filenames for case-insensitive matching
   set_fact:
-    cfg_dicts: "{{ sftp_cfg_files | map('lower') | map('community.general.dict_kv', 'name') | list }}"
+    cfg_lower: "{{ sftp_cfg_files | map('lower') | list }}"
 
-- name: Filter matching files (AWX-safe)
+- name: Filter matching files (pure Jinja, AWX-safe)
   set_fact:
     matching_files: >-
-      {{ cfg_dicts
-         | selectattr('name', 'search', host_prefix ~ '-[0-9]{8}-[0-9]{6}\\.cfg')
-         | map(attribute='name')
+      {{ cfg_lower
+         | select('search', host_prefix ~ '-[0-9]{8}-[0-9]{6}\\.cfg')
          | list }}
 
 - name: Debug matching files
