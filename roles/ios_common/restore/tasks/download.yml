@@ -10,11 +10,11 @@
   delegate_to: localhost
 
 # ---------------------------------------------------------
-# STEP 2 — List files from SFTP
+# STEP 2 — List files from host-specific SFTP directory
 # ---------------------------------------------------------
-- name: List backup files on SFTP server (AWX-safe)
+- name: List backup files on SFTP server (host-specific directory)
   ansible.builtin.shell: >
-    printf "cd {{ sftp_path | default('/ios/backups/') }}\nls -1\nbye\n" |
+    printf "cd {{ sftp_path | default('/ios/backups') }}/{{ inventory_hostname }}\nls -1\nbye\n" |
     sshpass -p '{{ sftp_password }}' sftp
     -oBatchMode=no
     -oStrictHostKeyChecking=no
@@ -52,59 +52,27 @@
 - debug:
     var: cfg_files
 
-# ---------------------------------------------------------
-# STEP 4 — Case-insensitive hostname prefix
-# ---------------------------------------------------------
-- name: Normalize hostname (strip FQDN + lowercase)
-  set_fact:
-    host_prefix: "{{ inventory_hostname.split('.')[0] | lower }}"
-
-- name: Lowercase filenames
-  set_fact:
-    cfg_lower: "{{ cfg_files | map('lower') | list }}"
-
-- debug:
-    var: cfg_lower
-
-# ---------------------------------------------------------
-# STEP 5 — AWX-PROOF FILTERING (NO JINJA FILTERS)
-# ---------------------------------------------------------
-- name: Initialize empty list for matching files
-  set_fact:
-    matching_files: []
-
-- name: Append matching files (AWX-proof loop)
-  set_fact:
-    matching_files: "{{ matching_files + [ item ] }}"
-  loop: "{{ cfg_lower }}"
-  when:
-    - item.startswith(host_prefix + '-')
-    - item.endswith('.cfg')
-
-- debug:
-    var: matching_files
-
-- name: Fail if no backup found
+- name: Fail if no backup files found
   fail:
-    msg: "No backup found for {{ inventory_hostname }} (prefix={{ host_prefix }})"
-  when: matching_files | length == 0
+    msg: "No backup files found in /ios/backups/{{ inventory_hostname }}/"
+  when: cfg_files | length == 0
 
 # ---------------------------------------------------------
-# STEP 6 — Select latest backup
+# STEP 4 — Select latest backup (sorted alphabetically)
 # ---------------------------------------------------------
 - name: Select latest backup
   set_fact:
-    latest_backup: "{{ matching_files | sort | last }}"
+    latest_backup: "{{ cfg_files | sort | last }}"
 
 - debug:
     var: latest_backup
 
 # ---------------------------------------------------------
-# STEP 7 — Download file
+# STEP 5 — Download file
 # ---------------------------------------------------------
 - name: Download latest backup file
   ansible.builtin.shell: >
-    printf "cd {{ sftp_path | default('/ios/backups/') }}\nget {{ latest_backup }} {{ download_dest_dir | default('/tmp') }}/{{ latest_backup }}\nbye\n" |
+    printf "cd {{ sftp_path | default('/ios/backups') }}/{{ inventory_hostname }}\nget {{ latest_backup }} {{ download_dest_dir | default('/tmp') }}/{{ latest_backup }}\nbye\n" |
     sshpass -p '{{ sftp_password }}' sftp
     -oBatchMode=no
     -oStrictHostKeyChecking=no
