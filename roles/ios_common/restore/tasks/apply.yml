@@ -1,52 +1,79 @@
 ---
+# roles/ios_common/restore/tasks/apply.yml
+
 # ============================================================
-# STEP 1 — Copy backup file into Nginx HTTPS directory
+# STEP 0 — Detect controller IP automatically
 # ============================================================
-- name: Ensure Nginx HTTPS directory exists
-  ansible.builtin.file:
-    path: /tmp/backups
-    state: directory
-    mode: '0755'
+
+- name: Detect controller IP automatically
+  set_fact:
+    controller_ip: "{{ ansible_default_ipv4.address }}"
   delegate_to: localhost
 
-- name: Place backup file in HTTPS directory
+# ============================================================
+# STEP 1 — Prepare HTTP-serving directory on controller
+# ============================================================
+
+- name: Ensure HTTP directory exists on controller
+  ansible.builtin.file:
+    path: /tmp
+    state: directory
+    mode: "01777"
+  delegate_to: localhost
+
+- name: Copy backup file into HTTP directory
   ansible.builtin.copy:
     src: "{{ backup_full_path }}"
-    dest: "/tmp/backups/{{ backup_filename }}"
+    dest: "/tmp/{{ backup_filename }}"
   delegate_to: localhost
 
 # ============================================================
-# STEP 2 — Device pulls file via HTTPS (non-interactive)
+# STEP 2 — Start temporary HTTP server on controller
 # ============================================================
-- name: Copy backup file to device flash using HTTPS
+
+- name: Start temporary HTTP server on controller
+  ansible.builtin.shell: |
+    cd /tmp
+    python3 -m http.server 8080 &
+  async: 10
+  poll: 0
+  delegate_to: localhost
+
+# ============================================================
+# STEP 3 — Device pulls backup via HTTP to bootflash
+# ============================================================
+
+- name: Copy backup file to device flash using HTTP
   cisco.ios.ios_command:
     commands:
-      - "copy https://{{ controller_ip }}/backups/{{ backup_filename }} bootflash:{{ backup_filename }} /noverify /quiet"
+      - "copy http://{{ controller_ip }}:8080/{{ backup_filename }} bootflash:{{ backup_filename }} /quiet"
   vars:
     ansible_command_timeout: 300
-  register: https_copy
+  register: http_copy
 
 - debug:
-    var: https_copy.stdout_lines
+    var: http_copy.stdout_lines
 
 # ============================================================
-# STEP 3 — Verify file exists on flash
+# STEP 4 — Verify file exists on bootflash
 # ============================================================
-- name: Verify uploaded file exists
+
+- name: Verify uploaded file exists on bootflash
   cisco.ios.ios_command:
     commands:
       - "dir bootflash: | include {{ backup_filename }}"
   register: flash_check
 
-- name: Fail if file not found on flash
+- name: Fail if file not found on bootflash
   fail:
     msg: "Backup file {{ backup_filename }} not found on device bootflash!"
   when: flash_check.stdout[0] is not search(backup_filename)
 
 # ============================================================
-# STEP 4 — Restore configuration using configure replace
+# STEP 5 — Restore configuration using configure replace
 # ============================================================
-- name: Restore config using configure replace
+
+- name: Restore configuration using configure replace
   cisco.ios.ios_command:
     commands:
       - "configure replace bootflash:{{ backup_filename }} force"
@@ -54,3 +81,12 @@
 
 - debug:
     var: restore_output.stdout_lines
+
+# ============================================================
+# STEP 6 — Stop HTTP server (best-effort cleanup)
+# ============================================================
+
+- name: Stop temporary HTTP server on controller
+  ansible.builtin.shell: "pkill -f 'python3 -m http.server'"
+  ignore_errors: true
+  delegate_to: localhost
