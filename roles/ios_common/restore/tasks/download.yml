@@ -62,17 +62,18 @@
 
 - name: Normalize hostname (strip FQDN + lowercase)
   set_fact:
-    host_prefix: "{{ inventory_hostname.split('.')[0] | lower | regex_replace('-', '\\-') }}"
+    host_prefix: "{{ inventory_hostname.split('.')[0] | lower }}"
 
 - name: Lowercase filenames for case-insensitive matching
   set_fact:
     cfg_lower: "{{ sftp_cfg_files | map('lower') | list }}"
 
-- name: Filter matching files (pure Jinja, AWX-safe)
+- name: Filter matching files (AWX-safe, no regex)
   set_fact:
     matching_files: >-
       {{ cfg_lower
-         | select('search', host_prefix ~ '-[0-9]{8}-[0-9]{6}\\.cfg')
+         | select('startswith', host_prefix ~ '-')
+         | select('endswith', '.cfg')
          | list }}
 
 - name: Debug matching files
