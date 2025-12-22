@@ -10,17 +10,14 @@
 # STEP 1 — LIST FILES (AWX-SAFE, NON-INTERACTIVE SFTP)
 # ---------------------------------------------------------
 
-- name: List backup files on SFTP server (AWX-safe batch mode)
-  ansible.builtin.command: |
-    sshpass -p "{{ sftp_password }}" sftp \
-      -oBatchMode=no \
-      -oStrictHostKeyChecking=no \
-      -oUserKnownHostsFile=/dev/null \
-      {{ sftp_username }}@{{ sftp_host }} <<EOF
-    cd {{ sftp_path | default('/ios/backups/') }}
-    ls -1
-    bye
-EOF
+- name: List backup files on SFTP server (AWX-safe, no heredoc)
+  ansible.builtin.shell: >
+    printf "cd {{ sftp_path | default('/ios/backups/') }}\nls -1\nbye\n" |
+    sshpass -p '{{ sftp_password }}' sftp
+    -oBatchMode=no
+    -oStrictHostKeyChecking=no
+    -oUserKnownHostsFile=/dev/null
+    {{ sftp_username }}@{{ sftp_host }}
   register: sftp_list
   delegate_to: localhost
   changed_when: false
@@ -95,20 +92,17 @@ EOF
     msg: "Selected latest backup: {{ latest_backup }}"
 
 # ---------------------------------------------------------
-# STEP 5 — DOWNLOAD THE FILE
+# STEP 5 — DOWNLOAD THE FILE (NO EOF)
 # ---------------------------------------------------------
 
-- name: Download latest backup file (AWX-safe batch mode)
-  ansible.builtin.command: |
-    sshpass -p "{{ sftp_password }}" sftp \
-      -oBatchMode=no \
-      -oStrictHostKeyChecking=no \
-      -oUserKnownHostsFile=/dev/null \
-      {{ sftp_username }}@{{ sftp_host }} <<EOF
-    cd {{ sftp_path | default('/ios/backups/') }}
-    get {{ latest_backup }} {{ download_dest_dir | default('/tmp') }}/{{ latest_backup }}
-    bye
-EOF
+- name: Download latest backup file (AWX-safe, no heredoc)
+  ansible.builtin.shell: >
+    printf "cd {{ sftp_path | default('/ios/backups/') }}\nget {{ latest_backup }} {{ download_dest_dir | default('/tmp') }}/{{ latest_backup }}\nbye\n" |
+    sshpass -p '{{ sftp_password }}' sftp
+    -oBatchMode=no
+    -oStrictHostKeyChecking=no
+    -oUserKnownHostsFile=/dev/null
+    {{ sftp_username }}@{{ sftp_host }}
   register: download_status
   delegate_to: localhost
   changed_when: "'Fetching' in download_status.stdout"
