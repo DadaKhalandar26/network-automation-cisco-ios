@@ -1,5 +1,4 @@
 ---
-
 - name: Enable SFTP server on device
   cisco.ios.ios_config:
     lines:
