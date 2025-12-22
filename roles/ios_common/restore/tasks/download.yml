@@ -68,11 +68,16 @@
   set_fact:
     cfg_lower: "{{ sftp_cfg_files | map('lower') | list }}"
 
-- name: Filter matching files using pure Jinja (AWX-proof)
+- name: Build matching_files using Jinja loop (AWX-proof)
   set_fact:
-    matching_files: >-
-      {{ [ item for item in cfg_lower
-           if item.startswith(host_prefix + '-') and item.endswith('.cfg') ] }}
+    matching_files: |
+      {% set out = [] %}
+      {% for item in cfg_lower %}
+      {%   if item.startswith(host_prefix + '-') and item.endswith('.cfg') %}
+      {%     do out.append(item) %}
+      {%   endif %}
+      {% endfor %}
+      {{ out }}
 
 - name: Debug matching files
   debug:
