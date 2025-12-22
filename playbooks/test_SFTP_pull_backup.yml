@@ -1,6 +1,6 @@
 ---
 - name: Pull latest backup for the target host
-  hosts: all
+  hosts: Test-IOS-XE-ISRV
   gather_facts: false
 
   tasks:
