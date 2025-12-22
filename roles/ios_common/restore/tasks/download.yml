@@ -54,7 +54,7 @@
 
 - name: Keep only tokens that look like .cfg files
   set_fact:
-    sftp_cfg_files: "{{ sftp_tokens | select('search','\\.cfg') | list }}"
+    sftp_cfg_files: "{{ sftp_tokens | select('search','\\.cfg$') | list }}"
 
 - name: Debug tokens and cfg files
   debug:
@@ -63,14 +63,27 @@
       - "tokens={{ sftp_tokens }}"
       - "cfg_files={{ sftp_cfg_files }}"
 
-- name: Find files that contain the inventory hostname
-  set_fact:
-    matching_files: "{{ sftp_cfg_files | select('search', inventory_hostname) | list }}"
+# -------------------------------
+# FIXED SECTION: STRICT FILTERING
+# -------------------------------
 
-- name: Select latest backup (hostname match first, fallback to most recent overall)
+- name: Find files that belong to this host (strict pattern)
   set_fact:
-    latest_backup: >-
-      {{ (matching_files | sort | last) if (matching_files | length) > 0 else (sftp_cfg_files | sort | last | default('')) }}
+    matching_files: >-
+      {{ sftp_cfg_files
+         | select('match',
+                  '^' ~ inventory_hostname ~ '-.*-[0-9]{8}-[0-9]{6}\\.cfg$')
+         | list }}
+
+- name: Debug matching files
+  debug:
+    msg:
+      - "Matching files for host={{ inventory_hostname }}"
+      - "{{ matching_files }}"
+
+- name: Select latest backup (strict host match only)
+  set_fact:
+    latest_backup: "{{ matching_files | sort | last | default('') }}"
 
 - name: Debug selected backup
   debug:
@@ -80,6 +93,10 @@
   fail:
     msg: "No backup found for {{ inventory_hostname }} on SFTP server; sftp_cfg_files={{ sftp_cfg_files }}"
   when: latest_backup == ""
+
+# -------------------------------
+# DOWNLOAD
+# -------------------------------
 
 - name: Download latest backup file
   ansible.builtin.expect:
