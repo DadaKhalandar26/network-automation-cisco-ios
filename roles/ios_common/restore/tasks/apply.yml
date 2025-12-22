@@ -1,9 +1,4 @@
 ---
-- name: Enable SFTP server on device
-  cisco.ios.ios_config:
-    lines:
-      - ip scp server enable
-
 - name: Upload backup file to device flash
   cisco.ios.ios_file:
     src: "{{ backup_full_path }}"
