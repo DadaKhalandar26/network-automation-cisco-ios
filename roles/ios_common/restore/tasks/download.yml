@@ -92,3 +92,9 @@
     msg:
       - "Downloaded: {{ downloaded_stat.stat.exists }}"
       - "Path: {{ download_dest_dir | default('/tmp') }}/{{ latest_backup }}"
+
+- name: Set backup filename and path for apply stage
+  set_fact:
+    backup_filename: "{{ latest_backup }}"
+    backup_full_path: "/tmp/{{ latest_backup }}"
+
