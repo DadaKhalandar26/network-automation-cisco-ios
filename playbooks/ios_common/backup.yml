@@ -4,6 +4,9 @@
   gather_facts: no
   connection: network_cli
 
+  vars_files:
+    - "../host_vars/{{ inventory_hostname }}.yml"
+
   vars:
     ansible_network_os: cisco.ios.ios
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}"
