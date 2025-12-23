@@ -5,42 +5,52 @@
 # - Falls back to password using expect
 # ============================================================
 
-- name: Check if remote backup directory exists (key-based SSH)
-  ansible.builtin.command: >
-    sftp -o BatchMode=yes
-        -o StrictHostKeyChecking=no
-        -o UserKnownHostsFile=/dev/null
-        {{ sftp_username }}@{{ sftp_host }}
-        "test -d /ios/backups/{{ inventory_hostname }} && echo present || echo missing"
+- name: Check backup directory exists via SFTP cd
+  ansible.builtin.expect:
+    command: >
+      sftp -o BatchMode=yes
+           -o StrictHostKeyChecking=no
+           -o UserKnownHostsFile=/dev/null
+           {{ sftp_username }}@{{ sftp_host }}
+    responses:
+      sftp>:
+        - "cd ios/backups/{{ inventory_hostname }}"
+        - "pwd"
+        - "bye"
   delegate_to: "{{ sftp_delegate | default('localhost') }}"
-  register: remote_dir_check
+  register: sftp_cd_check
   changed_when: false
   failed_when: false
 
-- name: Create remote backup directory using password SSH (expect) if missing
+- name: Create backup directory via SFTP
   ansible.builtin.expect:
     command: >
       sftp -o StrictHostKeyChecking=no
-          -o UserKnownHostsFile=/dev/null
-          {{ sftp_username }}@{{ sftp_host }}
-          "mkdir backups/{{ inventory_hostname }}"
+           -o UserKnownHostsFile=/dev/null
+           {{ sftp_username }}@{{ sftp_host }}
     responses:
       (?i)password: "{{ sftp_password }}"
+      sftp>:
+        - "mkdir ios/backups/{{ inventory_hostname }}"
+        - "bye"
   delegate_to: "{{ sftp_delegate | default('localhost') }}"
-  when: remote_dir_check.stdout is defined and
-        remote_dir_check.stdout.find('present') == -1
-  register: mkdir_expect_result
-  failed_when: mkdir_expect_result.rc != 0
+  register: sftp_mkdir_result
+  failed_when: sftp_mkdir_result.rc != 0
 
-- name: Re-check remote backup directory exists
-  ansible.builtin.command: >
-    sftp -o BatchMode=yes
-        -o StrictHostKeyChecking=no
-        -o UserKnownHostsFile=/dev/null
-        {{ sftp_username }}@{{ sftp_host }}
-        "test -d /ios/backups/{{ inventory_hostname }} && echo present || echo missing"
+- name: Check backup directory exists via SFTP cd
+  ansible.builtin.expect:
+    command: >
+      sftp -o BatchMode=yes
+           -o StrictHostKeyChecking=no
+           -o UserKnownHostsFile=/dev/null
+           {{ sftp_username }}@{{ sftp_host }}
+    responses:
+      sftp>:
+        - "cd ios/backups/{{ inventory_hostname }}"
+        - "pwd"
+        - "bye"
   delegate_to: "{{ sftp_delegate | default('localhost') }}"
-  register: remote_dir_check_final
+  register: sftp_cd_check
   changed_when: false
   failed_when: false
 
