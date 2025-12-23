@@ -19,3 +19,4 @@
   when: remote_check.stderr is defined and
         ('No such file' in remote_check.stderr or
          'Couldn't stat' in remote_check.stderr)
+         'Couldn't stat' in remote_check.stderr)
