@@ -1,18 +1,18 @@
 ---
 - name: Verify SFTP upload result (expect returned OK)
   ansible.builtin.debug:
-    msg: "SFTP upload stdout: {{ sftp_result.stdout_lines | default([]) }}"
+    msg: "SFTP upload stdout: {{ sftp_expect_result.stdout_lines | default([]) }}"
 
 - name: Optionally check remote file exists via ssh (best-effort)
-  ansible.builtin.shell: |
-    ssh -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
-        {{ sftp_username }}@{{ sftp_host }} \
+  ansible.builtin.shell: >
+    ssh -o StrictHostKeyChecking=no
+        -o UserKnownHostsFile=/dev/null
+        {{ sftp_username }}@{{ sftp_host }}
         "test -f /ios/backups/{{ inventory_hostname }}/{{ backup_result.backup_path | basename }} && echo present || echo missing"
   delegate_to: localhost
   register: remote_check
-  ignore_errors: true
   changed_when: false
+  failed_when: false
 
 - name: Fail if remote file missing (optional)
   ansible.builtin.fail:
