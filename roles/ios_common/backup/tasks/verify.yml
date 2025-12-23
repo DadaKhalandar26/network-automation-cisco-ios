@@ -4,11 +4,10 @@
     msg: "SFTP upload stdout: {{ sftp_expect_result.stdout_lines | default([]) }}"
 
 - name: Optionally check remote file exists via sftp (best-effort)
-  ansible.builtin.shell: >
-    sftp -o StrictHostKeyChecking=no
-        -o UserKnownHostsFile=/dev/null
-        {{ sftp_username }}@{{ sftp_host }}
-        "ls /ios/backups/{{ inventory_hostname }}/{{ backup_result.backup_path | basename }} && echo present || echo missing"
+  ansible.builtin.shell: |
+    sftp -o StrictHostKeyChecking=no \
+         -o UserKnownHostsFile=/dev/null \
+         {{ sftp_username }}@{{ sftp_host }} <<< "ls /ios/backups/{{ inventory_hostname }}/{{ backup_result.backup_path | basename }}"
   delegate_to: localhost
   register: remote_check
   changed_when: false
@@ -17,4 +16,6 @@
 - name: Fail if remote file missing (optional)
   ansible.builtin.fail:
     msg: "Uploaded backup not found on SFTP server"
-  when: remote_check.stdout is defined and ('present' not in remote_check.stdout)
+  when: remote_check.stderr is defined and
+        ('No such file' in remote_check.stderr or
+         'Couldn't stat' in remote_check.stderr)
