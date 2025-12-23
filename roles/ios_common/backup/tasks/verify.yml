@@ -3,9 +3,9 @@
   ansible.builtin.debug:
     msg: "SFTP upload stdout: {{ sftp_expect_result.stdout_lines | default([]) }}"
 
-- name: Optionally check remote file exists via ssh (best-effort)
+- name: Optionally check remote file exists via sftp (best-effort)
   ansible.builtin.shell: >
-    ssh -o StrictHostKeyChecking=no
+    sftp -o StrictHostKeyChecking=no
         -o UserKnownHostsFile=/dev/null
         {{ sftp_username }}@{{ sftp_host }}
         "test -f /ios/backups/{{ inventory_hostname }}/{{ backup_result.backup_path | basename }} && echo present || echo missing"
