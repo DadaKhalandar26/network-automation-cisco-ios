@@ -31,7 +31,7 @@
     responses:
       (?i)password: "{{ sftp_password }}"
       sftp>:
-        - "mkdir ios/backups/{{ inventory_hostname }}"
+        - "mkdir backups/{{ inventory_hostname }}"
         - "bye"
   delegate_to: "{{ sftp_delegate | default('localhost') }}"
   register: sftp_mkdir_result
