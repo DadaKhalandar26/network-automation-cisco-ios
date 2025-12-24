@@ -168,13 +168,10 @@ Example Playbook
 - Treat NetBox as the single source of interface intent
 
 #### Future Improvements
+- SVI (VLAN interface) configuration support
+- Drift detection and compliance checks
+- Extended platform support
+- Integration with approval-based AWX workflows
 
-SVI (VLAN interface) configuration support
-
-Drift detection and compliance checks
-
-Extended platform support
-
-Integration with approval-based AWX workflows
 
 
