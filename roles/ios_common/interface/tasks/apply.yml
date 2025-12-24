@@ -16,12 +16,6 @@
           ('speed ' ~ item.speed)
             if item.speed is defined else omit,
 
-          ('duplex ' ~ item.duplex)
-            if item.duplex is defined else omit,
-
-          ('no switchport'
-            if item.mode | default('routed') == 'routed' else 'switchport'),
-
           ('vrf forwarding ' ~ item.vrf)
             if item.vrf is defined and item.vrf else omit,
 
