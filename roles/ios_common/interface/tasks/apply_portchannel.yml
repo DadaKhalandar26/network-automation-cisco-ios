@@ -1,0 +1,14 @@
+- name: Configure port-channel interface
+  tags:
+    - interface
+    - portchannel
+  cisco.ios.ios_config:
+    parents: "interface {{ item.name }}"
+    lines:
+      - "description {{ item.description }}"
+      - "{{ 'no shutdown' if item.enabled else 'shutdown' }}"
+      - "switchport mode trunk"
+      - "switchport trunk allowed vlan {{ item.allowed_vlans }}"
+  loop: "{{ port_channels }}"
+  loop_control:
+    label: "{{ item.name }}"
