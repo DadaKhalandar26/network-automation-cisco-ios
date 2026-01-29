@@ -18,13 +18,13 @@
   when:
     - svis | default([]) | length > 0
 
+- import_tasks: apply_portchannel.yml
+  import_tasks: apply_portchannel.yml
+  when:
+    - port_channels is defined
+    - port_channels | length > 0
+
 - name: Apply extra interface commands
   import_tasks: apply_extra.yml
   when:
     - interfaces is defined
-
-- import_tasks: apply_portchannel.yml
-  tags: [interface, portchannel]
-  when:
-    - port_channels is defined
-    - port_channels | length > 0
