@@ -1,0 +1,34 @@
+---
+- name: Apply routed interface intent
+  cisco.ios.ios_config:
+    parents: "interface {{ item.name }}"
+    lines: >-
+      {{
+        [
+          ('description ' ~ item.description)
+            if item.description is defined else omit,
+
+          ('no shutdown' if item.enabled | default(false) else 'shutdown'),
+
+          'no switchport',
+
+          ('ip address ' ~ item.ipv4.address ~ ' ' ~ item.ipv4.mask)
+            if item.ipv4 is defined else omit,
+
+          ('ip ospf ' ~ item.ospf.process ~ ' area ' ~ item.ospf.area)
+            if item.ospf is defined else omit,
+
+          (
+            'ip ospf message-digest-key ' ~
+            item.ospf.auth_key_id ~
+            ' md5 ' ~
+            ospf_md5_keys[item.ospf.auth_key_id | string]
+          )
+            if item.ospf.auth_key_id is defined else omit
+        ]
+        | reject('equalto', omit)
+        | list
+      }}
+  loop: "{{ interfaces | selectattr('role', 'equalto', 'routed') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
