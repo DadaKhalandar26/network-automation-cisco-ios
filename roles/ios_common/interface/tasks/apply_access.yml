@@ -1,0 +1,79 @@
+---
+- name: Apply access port intent
+  cisco.ios.ios_config:
+    parents: "interface {{ item.name }}"
+    lines: >-
+      {{
+        [
+          ('description ' ~ item.description)
+            if item.description is defined else omit,
+
+          ('no shutdown' if item.enabled | default(false) else 'shutdown'),
+
+          'switchport mode access',
+
+          ('switchport access vlan ' ~ item.access_vlan)
+            if item.access_vlan is defined else omit,
+
+          ('switchport voice vlan ' ~ item.voice_vlan)
+            if item.voice_vlan is defined else omit,
+
+          (
+            'negotiation auto'
+            if item.speed | default('') == 'auto'
+            else ('speed ' ~ item.speed)
+          )
+            if item.speed is defined else omit,
+
+          # 802.1X / MAB
+          ('authentication control-direction ' ~ item.authentication.control_direction)
+            if item.authentication.control_direction is defined else omit,
+
+          ('authentication event fail retry 0 action authorize vlan ' ~ item.authentication.fail_vlan)
+            if item.authentication.fail_vlan is defined else omit,
+
+          ('authentication event server dead action authorize vlan ' ~ item.authentication.server_dead_vlan)
+            if item.authentication.server_dead_vlan is defined else omit,
+
+          ('authentication event server dead action authorize voice')
+            if item.voice_vlan is defined else omit,
+
+          ('authentication event no-response action authorize vlan ' ~ item.authentication.no_response_vlan)
+            if item.authentication.no_response_vlan is defined else omit,
+
+          ('authentication event server alive action reinitialize'),
+
+          ('authentication host-mode ' ~ item.authentication.host_mode)
+            if item.authentication.host_mode is defined else omit,
+
+          ('authentication port-control ' ~ item.authentication.port_control)
+            if item.authentication.port_control is defined else omit,
+
+          ('authentication periodic')
+            if item.authentication.periodic | default(false) else omit,
+
+          ('authentication timer reauthenticate ' ~ item.authentication.reauth_timer)
+            if item.authentication.reauth_timer is defined else omit,
+
+          ('mab')
+            if item.authentication.mab | default(false) else omit,
+
+          # Dot1X
+          ('dot1x pae authenticator')
+            if item.dot1x.enable | default(false) else omit,
+
+          ('dot1x timeout tx-period ' ~ item.dot1x.tx_period)
+            if item.dot1x.tx_period is defined else omit,
+
+          ('dot1x timeout supp-timeout ' ~ item.dot1x.supp_timeout)
+            if item.dot1x.supp_timeout is defined else omit,
+
+          ('spanning-tree portfast')
+            if item.stp.portfast | default(false) else omit
+        ]
+        | reject('equalto', omit)
+        | list
+      }}
+  loop: "{{ interfaces | selectattr('role', 'equalto', 'access') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
