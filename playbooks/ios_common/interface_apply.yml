@@ -1,5 +1,5 @@
 - name: Interface enforcement
-  hosts: Test-IOS-XE-ISRV
+  hosts: IN-HYD-CD01
   gather_facts: no
   connection: network_cli
 
