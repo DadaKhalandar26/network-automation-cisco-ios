@@ -1,0 +1,11 @@
+---
+- name: Apply free-form interface commands
+  cisco.ios.ios_config:
+    parents: "interface {{ item.name }}"
+    lines: "{{ item.extra_commands }}"
+  when:
+    - item.extra_commands is defined
+    - item.extra_commands | length > 0
+  loop: "{{ interfaces }}"
+  loop_control:
+    label: "{{ item.name }}"
