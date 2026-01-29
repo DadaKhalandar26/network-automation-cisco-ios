@@ -1,35 +1,25 @@
 ---
-- name: Apply interface intent
-  cisco.ios.ios_config:
-    parents: "interface {{ item.name }}"
-    lines: >-
-      {{
-        [
-          ('description ' ~ item.description)
-            if item.description is defined else omit,
+# Dispatcher – decides what to run
 
-          ('no shutdown' if item.enabled | default(false) else 'shutdown'),
+- name: Apply access port configuration
+  import_tasks: apply_access.yml
+  when:
+    - interfaces is defined
+    - interfaces | selectattr('role', 'equalto', 'access') | list | length > 0
 
-          ('mtu ' ~ item.mtu)
-            if item.mtu is defined else omit,
+- name: Apply routed interface configuration
+  import_tasks: apply_routed.yml
+  when:
+    - interfaces is defined
+    - interfaces | selectattr('role', 'equalto', 'routed') | list | length > 0
 
-          ('speed ' ~ item.speed)
-            if item.speed is defined else omit,
+- name: Apply SVI configuration
+  import_tasks: apply_svi.yml
+  when:
+    - svis | default([]) | length > 0
 
-          ('vrf forwarding ' ~ item.vrf)
-            if item.vrf is defined and item.vrf else omit,
+- name: Apply extra interface commands
+  import_tasks: apply_extra.yml
+  when:
+    - interfaces is defined
 
-          ('ip address ' ~ item.ipv4.address ~ ' ' ~ item.ipv4.mask)
-            if item.ipv4 is defined and item.ipv4.address else omit,
-
-          ('logging event link-status')
-            if item.logging_event_link | default(false) else omit
-        ]
-        | reject('equalto', omit)
-        | list
-      }}
-    save_when: modified
-  loop: "{{ interfaces }}"
-  loop_control:
-    label: "{{ item.name }}"
-  register: apply_result
