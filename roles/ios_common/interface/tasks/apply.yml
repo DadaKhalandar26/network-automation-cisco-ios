@@ -23,3 +23,8 @@
   when:
     - interfaces is defined
 
+- import_tasks: apply_portchannel.yml
+  tags: [interface, portchannel]
+  when:
+    - port_channels is defined
+    - port_channels | length > 0
