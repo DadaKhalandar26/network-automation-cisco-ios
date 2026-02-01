@@ -1,7 +1,7 @@
 #Test Working
 ---
 - name: Deploy login banner to Cisco IOS
-  hosts: Test-IOS-XE-ISRV
+  hosts: platforms_cisco-ios
   gather_facts: no
   
   vars:
