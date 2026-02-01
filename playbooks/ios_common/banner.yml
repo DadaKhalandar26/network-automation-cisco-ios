@@ -1,8 +1,8 @@
-#Test Working
 ---
 - name: Deploy login banner to Cisco IOS
   hosts: platforms_cisco-ios
   gather_facts: no
+  become: yes
   
   vars:
     ansible_connection: network_cli
