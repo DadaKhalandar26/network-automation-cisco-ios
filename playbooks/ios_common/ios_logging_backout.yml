@@ -1,6 +1,6 @@
 ---
 - name: IOS | LOGGING BACK-OUT
-  hosts: tenants_test-env
+  hosts: platforms_cisco-ios
   gather_facts: no
 
   tasks:
