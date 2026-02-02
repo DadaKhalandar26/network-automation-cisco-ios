@@ -1,0 +1,4 @@
+---
+- name: Run Logging Configuration
+  include_tasks: logging/apply.yml
+  tags: logging
