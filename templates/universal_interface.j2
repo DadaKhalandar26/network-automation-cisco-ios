@@ -3,20 +3,45 @@
 interface {{ iface.name }}
  description {{ iface.description }}
  
-{# -------------------------------------------------------- #}
-{# ROLE 1: ROUTED PORT (Layer 3)                            #}
-{# -------------------------------------------------------- #}
+{# --- MACRO FOR CIDR TO NETMASK CONVERSION (Workaround for missing netaddr) --- #}
+{% set netmask_map = {
+    '32': '255.255.255.255',
+    '31': '255.255.255.254',
+    '30': '255.255.255.252',
+    '29': '255.255.255.248',
+    '28': '255.255.255.240',
+    '27': '255.255.255.224',
+    '26': '255.255.255.192',
+    '25': '255.255.255.128',
+    '24': '255.255.255.0',
+    '23': '255.255.254.0',
+    '22': '255.255.252.0',
+    '21': '255.255.248.0',
+    '20': '255.255.240.0',
+    '19': '255.255.224.0',
+    '18': '255.255.192.0',
+    '17': '255.255.128.0',
+    '16': '255.255.0.0',
+    '8':  '255.0.0.0'
+} %}
+
+{# --- ROLE 1: ROUTED PORT (Layer 3) --- #}
 {% if iface.ipv4 and 'Vlan' not in iface.name %}
+ {% set ip_val = iface.ipv4.split('/')[0] %}
+ {% set cidr_val = iface.ipv4.split('/')[1] %}
  no switchport
- ip address {{ iface.ipv4 | ipaddr('address') }} {{ iface.ipv4 | ipaddr('netmask') }}
+ ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
  no shutdown
 
-{# -------------------------------------------------------- #}
-{# ROLE 2: SVI (Vlan Interface)                             #}
-{# -------------------------------------------------------- #}
+{# --- ROLE 2: SVI (Vlan Interface) --- #}
 {% elif iface.ipv4 and 'Vlan' in iface.name %}
- ip address {{ iface.ipv4 | ipaddr('address') }} {{ iface.ipv4 | ipaddr('netmask') }}
+ {% set ip_val = iface.ipv4.split('/')[0] %}
+ {% set cidr_val = iface.ipv4.split('/')[1] %}
+ ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
  no shutdown
+
+{# --- ROLE 3 & 4 (Trunk/Access) remain the same --- #}
+{% elif ... %}
 
 {# -------------------------------------------------------- #}
 {# ROLE 3: TRUNK / UPLINK                                   #}
