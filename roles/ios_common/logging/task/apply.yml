@@ -1,4 +1,4 @@
 ---
 - name: Configure logging
   ios_config:
-    src: "{{ lookup('template', '../templates/logging.j2') }}"
+    src: {{ lookup('file', playbook_dir + '../templates/logging.j2') }}
