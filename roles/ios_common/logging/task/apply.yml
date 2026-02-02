@@ -1,6 +1,6 @@
 ---
-- name: IOS | Apply logging configuration
-  cisco.ios.ios_config:
+- name: Configure logging
+  ios_config:
     src: "{{ lookup('template', '../templates/logging.j2') }}"
   when:
     - logging_enabled | default(true)
