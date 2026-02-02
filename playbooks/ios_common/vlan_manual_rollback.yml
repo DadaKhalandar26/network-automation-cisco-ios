@@ -14,7 +14,9 @@
         lines:
           - "no vlan {{ item.id }}"
       loop: "{{ vlans }}"
-      when: vlans is defined
+      when: 
+        - vlans is defined
+        - item.id != 10
       register: rollback_result
 
     - name: Verify Rollback (Show VLAN Brief)
@@ -26,4 +28,5 @@
     - name: Display Verification
       debug:
         var: verify_output.stdout_lines
+
 
