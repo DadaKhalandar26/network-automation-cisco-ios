@@ -5,6 +5,9 @@ api_endpoint: http://192.168.29.182:8000/
 token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
 validate_certs: true
 config_context: true
+config_context: true
+interfaces: true
+ip_addresses: true
 group_by:
   - sites
   - region
@@ -15,3 +18,27 @@ group_by:
   - tenants
 compose:
   ansible_host: "{{ primary_ip.address | ipaddr('address') }}"
+  
+  interface_list: >-
+    interfaces | default([]) | map('combine', {
+      'name': name,
+      'description': description | default('Managed by Ansible'),
+      'enabled': enabled,
+      
+      # Role Determination Logic
+      'mode': (custom_fields.switchport_mode.value if custom_fields.switchport_mode is mapping else custom_fields.switchport_mode) 
+               | default(mode.value if mode else 'access'),
+      
+      'ipv4': (ip_addresses | selectattr('interface.name', 'equalto', name) | map(attribute='address') | first | default(None)),
+      
+      # VLAN Data
+      'access_vlan': (untagged_vlan.vid if untagged_vlan else None),
+      'voice_vlan': custom_fields.voice_vlan | default(None),
+      'trunk_vlans': (tagged_vlans | map(attribute='vid') | join(',') if tagged_vlans else None),
+      'native_vlan': (untagged_vlan.vid if mode is defined and mode.value == 'tagged' and untagged_vlan else None),
+
+      # Features
+      'auth_enabled': custom_fields.auth_enable | default(false),
+      'portfast': custom_fields.stp_portfast | default(false),
+      'qos_profile': custom_fields.qos_profile | default('default')
+    }) | list
