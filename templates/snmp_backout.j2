@@ -1,0 +1,17 @@
+{% for host in nms_hosts | default([]) %}
+no snmp-server host {{ host }} version 3 priv {{ snmp_user }}
+{% endfor %}
+
+no snmp-server user {{ snmp_user }} {{ snmp_group_name }}
+no snmp-server group {{ snmp_group_name }} v3 priv
+no snmp-server view {{ snmp_view }}
+
+no snmp-server community public
+no snmp-server community private
+
+no ip access-list standard {{ snmp_acl }}
+
+no snmp-server enable traps syslog
+no snmp-server enable traps ospf
+no snmp-server enable traps ethernet evc
+no snmp-server enable traps snmp
