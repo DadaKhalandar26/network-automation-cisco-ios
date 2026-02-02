@@ -18,6 +18,18 @@
    - name: CHECKPOINT - Variables Loaded
      debug:
        msg: "Variables are loaded. Now attempting to run the role."
+
+  # --- ADD THIS DEBUG BLOCK ---
+   - name: DEBUG - Show me the actual file content on the runner
+     delegate_to: localhost
+     command: "cat {{ playbook_dir }}/../../roles/ios_common/tasks/logging/apply.yml"
+     register: file_check
+     ignore_errors: yes
+
+   - name: DEBUG - Print file content
+     debug:
+       var: file_check.stdout_lines
+   # ----------------------------
     
    - name: Apply logging configuration
      include_role:
