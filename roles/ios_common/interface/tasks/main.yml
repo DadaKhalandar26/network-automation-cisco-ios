@@ -7,7 +7,7 @@
       - switchport mode {{ item.mode }}
       - "{% if item.mode == 'access' %}spanning-tree portfast{% endif %}"
     parents: "interface {{ item.name }}"
-  loop: "{{ interface_list }}"
+  loop: "{{ interface_list | default([]) }}"
   when: 
     - item.mode is defined 
     - item.mode in ['access', 'trunk']
