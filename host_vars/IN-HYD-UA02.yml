@@ -9,7 +9,7 @@ snmp_location: "Hyderabad"
 logging_source_interface: vlan 10
 vlans:
   - id: 21
-    name: 10.10.8.128/25_USER_VLAN
+    name: 10.10.9.0/25_USER_VLAN
     state: present
   - id: 31
     name: 10.10.9.128/25_VOICE_VLAN
