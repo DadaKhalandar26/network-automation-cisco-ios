@@ -1,8 +1,3 @@
-{% for iface in interface_list %}
-!
-interface {{ iface.name }}
- description {{ iface.description }}
- 
 {# --- MACRO FOR CIDR TO NETMASK CONVERSION (Workaround for missing netaddr) --- #}
 {% set netmask_map = {
     '32': '255.255.255.255',
@@ -25,6 +20,11 @@ interface {{ iface.name }}
     '8':  '255.0.0.0'
 } %}
 
+{% for iface in interface_list %}
+!
+interface {{ iface.name }}
+ description {{ iface.description }}
+
 {# --- ROLE 1: ROUTED PORT (Layer 3) --- #}
 {% if iface.ipv4 and 'Vlan' not in iface.name %}
  {% set ip_val = iface.ipv4.split('/')[0] %}
@@ -40,13 +40,9 @@ interface {{ iface.name }}
  ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
  no shutdown
 
-{# --- ROLE 3 & 4 (Trunk/Access) remain the same --- #}
-{% elif ... %}
-
-{# -------------------------------------------------------- #}
-{# ROLE 3: TRUNK / UPLINK                                   #}
-{# -------------------------------------------------------- #}
+{# --- ROLE 3: TRUNK / UPLINK --- #}
 {% elif iface.mode == 'tagged' or iface.mode == 'trunk' %}
+ switchport
  switchport mode trunk
  {% if iface.trunk_vlans %}
  switchport trunk allowed vlan {{ iface.trunk_vlans }}
@@ -56,21 +52,22 @@ interface {{ iface.name }}
  {% endif %}
  no shutdown
 
-{# -------------------------------------------------------- #}
-{# ROLE 4: ACCESS PORT (User, Printer, Camera)              #}
-{# -------------------------------------------------------- #}
+{# --- ROLE 4: ACCESS PORT --- #}
 {% else %}
+ switchport
  switchport mode access
  switchport access vlan {{ iface.access_vlan | default(1) }}
  {% if iface.voice_vlan %}
  switchport voice vlan {{ iface.voice_vlan }}
  {% endif %}
+ 
+ device-tracking attach-policy {{ site_tracking_policy | default('SSC_IPDT') }}
+ speed auto 100 1000
+ no mdix auto
  spanning-tree portfast
  no shutdown
 
- {# -- SUB-ROLE: SECURE USER PORT (Dot1x/MAB) -- #}
  {% if iface.auth_enabled %}
-  device-tracking attach-policy {{ site_tracking_policy | default('SSC_IPDT') }}
   authentication control-direction in
   authentication event fail retry 0 action authorize vlan {{ site_auth_fail_vlan }}
   authentication event server dead action authorize vlan {{ site_auth_server_dead_vlan }}
@@ -81,15 +78,16 @@ interface {{ iface.name }}
   authentication periodic
   authentication timer reauthenticate {{ site_auth_reauth_timer | default(3600) }}
   mab
+  snmp trap mac-notification change added
+  snmp trap mac-notification change removed
   dot1x pae authenticator
-  dot1x timeout tx-period 9
-  dot1x timeout supp-timeout 15
+  dot1x timeout tx-period {{ site_dot1x_tx_period | default(9) }}
+  dot1x timeout supp-timeout {{ site_dot1x_supp_timeout | default(15) }}
  {% endif %}
  
- {# -- SUB-ROLE: QoS -- #}
- {% if iface.qos_profile == 'phone_trust' %}
-  service-policy input PM_PHONE_TRUST_IN
-  service-policy output PM_DSCP_PQ_OUT
+ {% if iface.qos_profile is defined and qos_policy_maps is defined and iface.qos_profile in qos_policy_maps %}
+  service-policy input {{ qos_policy_maps[iface.qos_profile].input }}
+  service-policy output {{ qos_policy_maps[iface.qos_profile].output }}
  {% endif %}
 
 {% endif %}
