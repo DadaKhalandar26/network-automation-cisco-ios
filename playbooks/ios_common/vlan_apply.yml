@@ -1,7 +1,7 @@
 #logic Working - Need to work on host filtering 
 ---
 - name: Deploy VLANs via role to Cisco IOS
-  hosts: tenants_test-env:&device_types_i86bi_linuxl2-adventerprisek9-m
+  hosts: device_roles_user_access_switch
   gather_facts: no
 
   vars_files:
