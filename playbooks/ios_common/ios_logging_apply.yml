@@ -4,8 +4,8 @@
   gather_facts: no
 
   vars_files:
-    - "{{ playbook_dir }}/../../group_vars/all.yml"
-    - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
+    - "playbook_dir + /../../group_vars/all.yml"
+    - "playbook_dir + /../../host_vars/{{ inventory_hostname }}.yml"
 
   vars:
     ansible_connection: network_cli
