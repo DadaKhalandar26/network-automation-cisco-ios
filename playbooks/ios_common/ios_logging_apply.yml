@@ -2,6 +2,10 @@
 - name: IOS | LOGGING APPLY
   hosts: platforms_cisco-ios
   gather_facts: no
+  
+  vars_files:
+  - "{{ lookup('file', playbook_dir + '/../../group_vars/all.yml') }}"
+  - "{{ lookup('file', playbook_dir + '/../../host_vars/{{ inventory_hostname }}.yml') }}"
 
   vars:
     ansible_connection: network_cli
