@@ -3,6 +3,8 @@
 - name: Deploy VLANs via role to Cisco IOS
   hosts: device_roles_user_access_switch
   gather_facts: no
+  become: yes
+  become_method: enable
 
   vars_files:
     - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
