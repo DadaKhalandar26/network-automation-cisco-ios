@@ -17,6 +17,5 @@
         file: "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
         
     - name: Apply logging configuration
-      import_role:ios_common/logging
-        tasks_from: logging/apply.yml
+      tasks_from: roles/ios_common/logging/apply.yml
         
