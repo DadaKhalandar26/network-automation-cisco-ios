@@ -4,9 +4,14 @@
   hosts: platforms_cisco-ios
   gather_facts: no
 
-  vars_files:
-    - "/../../group_vars/all.yml"
-    - "/../../host_vars/{{ inventory_hostname }}.yml"
+  pre_tasks:
+    - name: Load Global Vars (Fixes 'snmp_view is undefined')
+      include_vars:
+        file: "{{ playbook_dir }}/../../group_vars/all.yml"
+
+    - name: Load Host Vars
+      include_vars:
+        file: "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
   
   roles:
     - role: logging_snmp
