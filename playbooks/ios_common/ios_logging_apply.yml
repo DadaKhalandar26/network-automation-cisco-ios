@@ -4,7 +4,7 @@
   gather_facts: no
   
   vars_files:
-    file: "{{ playbook_dir }}/../../group_vars/all.yml"
+    - "{{ playbook_dir }}/../../group_vars/all.yml"
 
 
   vars:
