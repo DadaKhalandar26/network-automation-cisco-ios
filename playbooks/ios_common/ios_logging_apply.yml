@@ -12,6 +12,6 @@
       import_role:
         name: ios_common
         tasks_from: logging/apply.yml
-
-- debug:
-  var: logging_hosts
+        
+    - debug:
+      var: logging_hosts
