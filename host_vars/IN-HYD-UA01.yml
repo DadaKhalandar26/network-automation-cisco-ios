@@ -1,0 +1,24 @@
+---
+ansible_connection: network_cli
+ansible_network_os: cisco.ios.ios
+ansible_network_cli_ssh_type: paramiko
+ansible_command_timeout: 120
+ansible_timeout: 60
+ansible_port: 22
+snmp_location: "Hyderabad"
+vlans:
+  - id: 20
+    name: 10.10.8.0/25_USER_VLAN
+    state: present
+  - id: 30
+    name: 10.10.9.0/25_VOICE_VLAN
+    state: present
+  - id: 40
+    name: 10.10.11.0/26_WIRELESS_VLAN
+    state: present
+  - id: 50
+    name: 10.10.11.64/26_SECURITY_VLAN
+    state: present
+  - id: 1000
+    name: 10.10.11.128/26_Guest
+    state: present
