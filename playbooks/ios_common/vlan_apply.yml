@@ -5,7 +5,7 @@
   gather_facts: no
 
   vars_files:
-    - "../host_vars/{{ inventory_hostname }}.yml"
+    - "/../../../host_vars/{{ inventory_hostname }}.yml"
   
   roles:
     - role: ios_common/vlan
