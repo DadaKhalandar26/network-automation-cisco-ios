@@ -10,5 +10,5 @@
   roles:
     - role: ios_common/vlan
       vars:
-        template_file: vlans.j2
+        template_file: /../../templates/vlans.j2
         commit: true
