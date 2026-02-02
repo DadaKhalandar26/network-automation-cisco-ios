@@ -15,7 +15,7 @@
      include_vars:
        file: "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
     
-   - name: Apply logging configuration
+- name: Apply Common Role
      include_role:
-       name: ios_common 
-       tasks_from: logging/apply.yml
+       name: ios_common/logging
+     tags: apply
