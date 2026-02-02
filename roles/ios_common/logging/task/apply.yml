@@ -2,8 +2,3 @@
 - name: Configure logging
   ios_config:
     src: "{{ lookup('template', '../templates/logging.j2') }}"
-  when:
-    - logging_enabled | default(true)
-  tags:
-    - logging
-    - logging_apply
