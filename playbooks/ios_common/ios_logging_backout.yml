@@ -1,0 +1,10 @@
+---
+- name: IOS | LOGGING BACK-OUT
+  hosts: tenants_test-env
+  gather_facts: no
+
+  tasks:
+    - name: Back-out logging configuration
+      import_role:
+        name: ios_common
+        tasks_from: logging/backout.yml
