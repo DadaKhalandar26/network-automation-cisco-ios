@@ -4,7 +4,10 @@
   gather_facts: no
   become: yes                 # essential for config mode
   become_method: enable
-
+  
+  vars_files:
+    - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
+    
   tasks:
     - name: Remove VLANs using ios_config
       cisco.ios.ios_config:
@@ -23,3 +26,4 @@
     - name: Display Verification
       debug:
         var: verify_output.stdout_lines
+
