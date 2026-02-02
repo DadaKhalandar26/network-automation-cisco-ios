@@ -1,0 +1,8 @@
+---
+- name: IOS | Back-out SNMP configuration
+  ios_config:
+    src: "{{ lookup('template', '../templates/snmp_backout.j2') }}"
+  when:
+    - snmp_backout | default(false)
+  tags:
+    - snmp_backout
