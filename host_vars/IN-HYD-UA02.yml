@@ -23,3 +23,6 @@ vlans:
   - id: 1000
     name: 10.10.11.128/26_Guest
     state: present
+  - id: 10
+    name: Management
+    state: present
