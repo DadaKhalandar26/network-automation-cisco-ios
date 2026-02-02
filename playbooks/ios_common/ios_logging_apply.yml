@@ -1,0 +1,10 @@
+---
+- name: IOS | LOGGING APPLY
+  hosts: platforms_cisco-ios
+  gather_facts: no
+
+  tasks:
+    - name: Apply logging configuration
+      import_role:
+        name: ios_common
+        tasks_from: logging/apply.yml
