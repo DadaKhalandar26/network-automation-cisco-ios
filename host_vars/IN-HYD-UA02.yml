@@ -10,6 +10,8 @@ logging_source_interface: vlan 10
 site_auth_reauth_timer: 10000
 site_dot1x_tx_period: 9
 site_dot1x_supp_timeout: 15
+site_auth_fail_vlan: 1000
+site_auth_server_dead_vlan: 1000
 vlans:
   - id: 21
     name: 10.10.9.0/25_USER_VLAN
