@@ -1,6 +1,6 @@
 ---
 - name: Deploy Universal Interface Configuration
-  hosts: device_roles_user_access_switch
+  hosts: platforms_cisco-ios
   gather_facts: no
   become: yes
   become_method: enable
