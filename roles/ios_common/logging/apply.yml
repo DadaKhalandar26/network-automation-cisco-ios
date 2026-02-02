@@ -1,9 +1,9 @@
 ---
-- name: IOS | Apply SNMP configuration
+- name: IOS | Apply logging configuration
   ios_config:
-    src: "{{ lookup('template', '../templates/snmp.j2') }}"
+    src: "{{ lookup('template', '../templates/logging.j2') }}"
   when:
-    - snmp_enabled | default(true)
+    - logging_enabled | default(true)
   tags:
-    - snmp
-    - snmp_apply
+    - logging
+    - logging_apply
