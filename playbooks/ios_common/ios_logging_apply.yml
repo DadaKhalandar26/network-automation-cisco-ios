@@ -10,12 +10,10 @@
   vars_files:
     - "{{ playbook_dir }}/../../group_vars/all.yml"
 
-  tasks:
-   - name: Load host-specific vars explicitly & global Vars
+  pre_tasks:
+   - name: Load host-specific vars explicitly
      include_vars:
        file: "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
     
-- name: Apply Common Role
-     include_role:
-       name: ios_common/logging
-     tags: apply
+  roles:
+    - role: ios_common/logging
