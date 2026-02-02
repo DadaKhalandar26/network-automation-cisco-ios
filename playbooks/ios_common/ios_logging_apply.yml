@@ -8,10 +8,10 @@
     ansible_network_os: cisco.ios.ios
 
   tasks:
-    # - name: Load host-specific vars explicitly
-    #   include_vars:
-    #     file: "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
-    #     file: "{{ playbook_dir }}/../../group_vars/all.yml"
+   - name: Load host-specific vars explicitly & global Vars
+      include_vars:
+       file: "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
+       file: "{{ playbook_dir }}/../../group_vars/all.yml"
     
     - name: Apply logging configuration
       tasks_from: roles/ios_common/logging/apply.yml
