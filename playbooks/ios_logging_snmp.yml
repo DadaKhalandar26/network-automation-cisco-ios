@@ -5,8 +5,8 @@
   gather_facts: no
 
   vars_files:
-    - "../group_vars/all.yml"
-    - "../host_vars/{{ inventory_hostname }}.yml"
+    - "/../../group_vars/all.yml"
+    - "/../../host_vars/{{ inventory_hostname }}.yml"
   
   roles:
     - role: logging_snmp
