@@ -18,5 +18,5 @@
         
     - name: Apply logging configuration
       import_role:ios_common/logging
-        tasks_from: apply.yml
+        tasks_from: logging/apply.yml
         
