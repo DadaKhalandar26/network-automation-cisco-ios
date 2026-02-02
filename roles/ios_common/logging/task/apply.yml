@@ -1,9 +1,4 @@
 ---
-# 1. Add this debug task to prove the file is loaded
-- name: DEBUG - Entering Logging Role
-  debug:
-    msg: "Success! Ansible has entered the logging/apply.yml file."
-
 - name: Configure logging
   ios_config:
     lines: "{{ lookup('template', playbook_dir + '/../../templates/logging.j2') | split('\n') }}"
