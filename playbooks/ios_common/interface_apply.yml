@@ -1,11 +1,13 @@
-- name: Interface enforcement
-  hosts: IN-HYD-CD01
+---
+- name: Deploy Universal Interface Configuration
+  hosts: device_roles_user_access_switch
   gather_facts: no
-  connection: network_cli
+  become: yes
+  become_method: enable
+  
+  vars_files:
+    - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
+    - "{{ playbook_dir }}/../../group_vars/all.yml"
 
-  vars:
-    ansible_network_os: cisco.ios.ios
-    
   roles:
-    - role: ios_common/interface
-      tags: [interface]
+    - ios_common/interface
