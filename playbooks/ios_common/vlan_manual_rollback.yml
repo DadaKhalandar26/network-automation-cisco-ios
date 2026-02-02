@@ -1,0 +1,25 @@
+---
+- name: Rollback VLANs (Remove VLANs defined in host_vars)
+  hosts: device_roles_user_access_switch
+  gather_facts: no
+  become: yes                 # essential for config mode
+  become_method: enable
+
+  tasks:
+    - name: Remove VLANs using ios_config
+      cisco.ios.ios_config:
+        lines:
+          - "no vlan {{ item.id }}"
+      loop: "{{ vlans }}"
+      when: vlans is defined
+      register: rollback_result
+
+    - name: Verify Rollback (Show VLAN Brief)
+      cisco.ios.ios_command:
+        commands:
+          - show vlan brief
+      register: verify_output
+
+    - name: Display Verification
+      debug:
+        var: verify_output.stdout_lines
