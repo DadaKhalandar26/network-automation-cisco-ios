@@ -1,7 +1,7 @@
 #Test working
 ---
 - name: Deploy SNMPv3 config
-  hosts: tenants_test-env
+  hosts: platforms_cisco-ios
   gather_facts: no
 
   vars_files:
