@@ -1,0 +1,72 @@
+{% for iface in interface_list %}
+!
+interface {{ iface.name }}
+ description {{ iface.description }}
+ 
+{# -------------------------------------------------------- #}
+{# ROLE 1: ROUTED PORT (Layer 3)                            #}
+{# -------------------------------------------------------- #}
+{% if iface.ipv4 and 'Vlan' not in iface.name %}
+ no switchport
+ ip address {{ iface.ipv4 | ipaddr('address') }} {{ iface.ipv4 | ipaddr('netmask') }}
+ no shutdown
+
+{# -------------------------------------------------------- #}
+{# ROLE 2: SVI (Vlan Interface)                             #}
+{# -------------------------------------------------------- #}
+{% elif iface.ipv4 and 'Vlan' in iface.name %}
+ ip address {{ iface.ipv4 | ipaddr('address') }} {{ iface.ipv4 | ipaddr('netmask') }}
+ no shutdown
+
+{# -------------------------------------------------------- #}
+{# ROLE 3: TRUNK / UPLINK                                   #}
+{# -------------------------------------------------------- #}
+{% elif iface.mode == 'tagged' or iface.mode == 'trunk' %}
+ switchport mode trunk
+ {% if iface.trunk_vlans %}
+ switchport trunk allowed vlan {{ iface.trunk_vlans }}
+ {% endif %}
+ {% if iface.native_vlan %}
+ switchport trunk native vlan {{ iface.native_vlan }}
+ {% endif %}
+ no shutdown
+
+{# -------------------------------------------------------- #}
+{# ROLE 4: ACCESS PORT (User, Printer, Camera)              #}
+{# -------------------------------------------------------- #}
+{% else %}
+ switchport mode access
+ switchport access vlan {{ iface.access_vlan | default(1) }}
+ {% if iface.voice_vlan %}
+ switchport voice vlan {{ iface.voice_vlan }}
+ {% endif %}
+ spanning-tree portfast
+ no shutdown
+
+ {# -- SUB-ROLE: SECURE USER PORT (Dot1x/MAB) -- #}
+ {% if iface.auth_enabled %}
+  device-tracking attach-policy {{ site_tracking_policy | default('SSC_IPDT') }}
+  authentication control-direction in
+  authentication event fail retry 0 action authorize vlan {{ site_auth_fail_vlan }}
+  authentication event server dead action authorize vlan {{ site_auth_server_dead_vlan }}
+  authentication event server dead action authorize voice
+  authentication event no-response action authorize vlan {{ site_auth_fail_vlan }}
+  authentication host-mode multi-domain
+  authentication port-control auto
+  authentication periodic
+  authentication timer reauthenticate {{ site_auth_reauth_timer | default(3600) }}
+  mab
+  dot1x pae authenticator
+  dot1x timeout tx-period 9
+  dot1x timeout supp-timeout 15
+ {% endif %}
+ 
+ {# -- SUB-ROLE: QoS -- #}
+ {% if iface.qos_profile == 'phone_trust' %}
+  service-policy input PM_PHONE_TRUST_IN
+  service-policy output PM_DSCP_PQ_OUT
+ {% endif %}
+
+{% endif %}
+!
+{% endfor %}
