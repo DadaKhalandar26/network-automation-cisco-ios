@@ -1,13 +1,13 @@
 ---
 plugin: netbox.netbox.nb_inventory
-#api_endpoint: http://192.168.29.200:8000/ #-- HYD
+# api_endpoint: http://192.168.29.200:8000/ #-- HYD
 api_endpoint: http://192.168.29.182:8000/
 token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
 validate_certs: true
 config_context: true
-config_context: true
 interfaces: true
 ip_addresses: true
+
 group_by:
   - sites
   - region
@@ -16,22 +16,26 @@ group_by:
   - platforms
   - tags
   - tenants
+
 compose:
-  ansible_host: "{{ primary_ip.address | ipaddr('address') }}"
-  
+  # Use primary_ip4 directly to avoid 'netaddr' library dependency issues
+  ansible_host: primary_ip4
+
+  # IMPORTANT: Indentation fixed here (2 spaces). It must be UNDER 'compose'
   interface_list: >-
     interfaces | default([]) | map('combine', {
       'name': name,
       'description': description | default('Managed by Ansible'),
       'enabled': enabled,
       
-      # Role Determination Logic
+      # Logic: Use Custom Field -> Fallback to Native Mode -> Default to Access
       'mode': (custom_fields.switchport_mode.value if custom_fields.switchport_mode is mapping else custom_fields.switchport_mode) 
                | default(mode.value if mode else 'access'),
       
+      # Find the IP for this interface
       'ipv4': (ip_addresses | selectattr('interface.name', 'equalto', name) | map(attribute='address') | first | default(None)),
       
-      # VLAN Data
+      # VLANs
       'access_vlan': (untagged_vlan.vid if untagged_vlan else None),
       'voice_vlan': custom_fields.voice_vlan | default(None),
       'trunk_vlans': (tagged_vlans | map(attribute='vid') | join(',') if tagged_vlans else None),
@@ -39,6 +43,5 @@ compose:
 
       # Features
       'auth_enabled': custom_fields.auth_enable | default(false),
-      'portfast': custom_fields.stp_portfast | default(false),
       'qos_profile': custom_fields.qos_profile | default('default')
     }) | list
