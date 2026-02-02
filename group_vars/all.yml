@@ -19,3 +19,8 @@ nms_hosts:
 logging_hosts:
   - 10.10.30.50
   - 10.10.30.51
+
+# Security Timers (Seconds)
+site_auth_reauth_timer: 1000      # How often to re-check auth
+site_dot1x_tx_period: 9           # Transmit period
+site_dot1x_supp_timeout: 15       # Supplicant timeout
