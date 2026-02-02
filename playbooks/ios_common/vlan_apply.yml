@@ -10,5 +10,5 @@
   roles:
     - role: ios_common/vlan
       vars:
-        template_file: "{{ lookup('template', '../templates/vlans.j2') }}"
+        template_file: "{{ lookup('template', playbook_dir ~ '/../../templates/vlans.j2') }}"
         commit: true
