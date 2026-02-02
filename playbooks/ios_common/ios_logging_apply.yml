@@ -14,6 +14,10 @@
    - name: Load host-specific vars explicitly & global Vars
      include_vars:
        file: "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
+   # 1. Add this Debug task to confirm the playbook flow works
+   - name: CHECKPOINT - Variables Loaded
+     debug:
+       msg: "Variables are loaded. Now attempting to run the role."
     
    - name: Apply logging configuration
      include_role:
