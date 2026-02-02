@@ -5,7 +5,7 @@
   gather_facts: no
 
   vars_files:
-    - "{{ lookup('file', playbook_dir ~ '/../../host_vars/{{ inventory_hostname }}.yml')"
+    - "{{ lookup('file', playbook_dir ~ '/../../host_vars/{{ inventory_hostname }}.yml')}}"
   
   roles:
     - role: ios_common/vlan
