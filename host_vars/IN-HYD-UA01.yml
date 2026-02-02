@@ -7,6 +7,9 @@ ansible_timeout: 60
 ansible_port: 22
 snmp_location: "Hyderabad"
 logging_source_interface: vlan 10
+site_auth_reauth_timer: 10000
+site_dot1x_tx_period: 9
+site_dot1x_supp_timeout: 15
 vlans:
   - id: 20
     name: 10.10.8.0/25_USER_VLAN
