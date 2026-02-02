@@ -5,6 +5,7 @@
 
   vars_files:
     - "../group_vars/all.yml"
+    - "../host_vars/{{ inventory_hostname }}.yml"
 
   vars:
     ansible_connection: network_cli
