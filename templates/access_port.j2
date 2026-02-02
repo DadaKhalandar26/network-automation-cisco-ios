@@ -1,0 +1,36 @@
+{% for iface in interface_list %}
+interface {{ iface.name }}
+ description {{ iface.description }}
+{# --- STANDARD L2 CONFIG --- #}
+ switchport access vlan {{ iface.access_vlan }}
+ switchport mode access
+ {% if iface.voice_vlan %}
+ switchport voice vlan {{ iface.voice_vlan }}
+ {% endif %}
+ speed auto 100 1000
+ no mdix auto
+ spanning-tree portfast
+
+{# --- AUTHENTICATION & SECURITY (Conditional Block) --- #}
+ {% if iface.auth_enabled %}
+ authentication control-direction in
+ authentication event fail retry 0 action authorize vlan {{ site_auth_fail_vlan }}
+ authentication event server dead action authorize vlan {{ site_auth_server_dead_vlan }}
+ authentication event server dead action authorize voice
+ authentication event no-response action authorize vlan {{ site_auth_fail_vlan }}
+ authentication event server alive action reinitialize
+ authentication periodic
+ authentication timer reauthenticate {{ site_auth_reauth_timer }}
+ mab
+ dot1x pae authenticator
+ dot1x timeout tx-period {{ site_dot1x_tx_period }}
+ dot1x timeout supp-timeout {{ site_dot1x_supp_timeout }}
+ {% endif %}
+ 
+ {% if not iface.enabled %}
+ shutdown
+ {% else %}
+ no shutdown
+ {% endif %}
+!
+{% endfor %}
