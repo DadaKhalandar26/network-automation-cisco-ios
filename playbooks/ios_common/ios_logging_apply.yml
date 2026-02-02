@@ -4,7 +4,7 @@
   gather_facts: no
   
   vars_files:
-  - "{{ lookup('file', playbook_dir + '/../../group_vars/all.yml') }}"
+  - "{{ playbook_dir }}/../../group_vars/all.yml"
   - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
 
   vars:
