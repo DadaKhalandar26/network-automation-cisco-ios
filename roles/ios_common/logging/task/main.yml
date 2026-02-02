@@ -1,4 +1,9 @@
 ---
 - name: Run Logging Configuration
   include_tasks: logging/apply.yml
-  tags: logging
+  tags: apply
+
+- name: Run Logging Rollback
+  include_tasks: logging/rollback.yml
+  tags: rollback
+  when: ansible_run_tags is defined and 'rollback' in ansible_run_tags
