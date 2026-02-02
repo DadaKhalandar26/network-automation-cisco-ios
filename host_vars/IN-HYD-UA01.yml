@@ -12,7 +12,7 @@ vlans:
     name: 10.10.8.0/25_USER_VLAN
     state: present
   - id: 30
-    name: 10.10.9.0/25_VOICE_VLAN
+    name: 10.10.8.128/25_VOICE_VLAN
     state: present
   - id: 40
     name: 10.10.11.0/26_WIRELESS_VLAN
