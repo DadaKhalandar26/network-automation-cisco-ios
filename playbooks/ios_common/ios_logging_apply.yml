@@ -8,7 +8,7 @@
     ansible_network_os: cisco.ios.ios
 
   vars_files:
-    - - "{{ playbook_dir }}/../../group_vars/all.yml"
+    - "{{ playbook_dir }}/../../group_vars/all.yml"
 
   tasks:
    - name: Load host-specific vars explicitly & global Vars
