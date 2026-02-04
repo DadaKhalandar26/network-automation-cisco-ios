@@ -7,6 +7,7 @@ interface {{ iface.name }}
 
 {# --- ROLE 1: ROUTED PORT (Layer 3) --- #}
 {% if iface.ipv4 and 'Vlan' not in iface.name %}
+ {# Try L3 config, but typically requires L3 image #}
  no switchport
  ip address {{ iface.ipv4.split('/')[0] }} 255.255.255.0
  no shutdown
@@ -21,10 +22,10 @@ interface {{ iface.name }}
  switchport
  switchport trunk encapsulation dot1q
  switchport mode trunk
- {% if iface.trunk_vlans %}
+ {% if iface.trunk_vlans and iface.trunk_vlans != 'null' %}
  switchport trunk allowed vlan {{ iface.trunk_vlans }}
  {% endif %}
- {% if iface.native_vlan %}
+ {% if iface.native_vlan and iface.native_vlan is not none and iface.native_vlan != 'null' %}
  switchport trunk native vlan {{ iface.native_vlan }}
  {% endif %}
  no shutdown
@@ -34,17 +35,15 @@ interface {{ iface.name }}
  switchport
  switchport mode access
  
- {% if iface.access_vlan and iface.access_vlan is not none %}
+ {% if iface.access_vlan and iface.access_vlan is not none and iface.access_vlan != 'null' %}
  switchport access vlan {{ iface.access_vlan }}
  {% endif %}
  
- {% if iface.voice_vlan and iface.voice_vlan is not none %}
+ {% if iface.voice_vlan and iface.voice_vlan is not none and iface.voice_vlan != 'null' %}
  switchport voice vlan {{ iface.voice_vlan }}
  {% endif %}
  
  device-tracking attach-policy {{ site_tracking_policy | default('SSC_IPDT') }}
- speed auto
- no mdix auto
  spanning-tree portfast
  no shutdown
 
