@@ -23,12 +23,11 @@
 {% for iface in interface_list %}
 !
 interface {{ iface.name }}
- {# ONLY generate description if it exists #}
  {% if iface.description and iface.description | length > 0 %}
  description {{ iface.description }}
  {% endif %}
 
-{# --- ROLE 1: ROUTED PORT (Layer 3) --- #}
+{# --- ROLE 1: ROUTED PORT (Layer 3 - Has IP, No Vlan in Name) --- #}
 {% if iface.ipv4 and 'Vlan' not in iface.name %}
  no switchport
  ip address {{ iface.ipv4.split('/')[0] }} 255.255.255.0
@@ -41,7 +40,6 @@ interface {{ iface.name }}
 
 {# --- ROLE 3: TRUNK / UPLINK --- #}
 {% elif iface.mode == 'tagged' or iface.mode == 'trunk' %}
- {# Force L2 state and Encapsulation #}
  switchport
  switchport trunk encapsulation dot1q
  switchport mode trunk
@@ -55,26 +53,30 @@ interface {{ iface.name }}
 
 {# --- ROLE 4: ACCESS PORT --- #}
 {% else %}
- {# Force L2 state #}
  switchport
  switchport mode access
- switchport access vlan {{ iface.access_vlan | default(1) }}
+ {% if iface.access_vlan %}
+ switchport access vlan {{ iface.access_vlan }}
+ {% endif %}
  {% if iface.voice_vlan %}
  switchport voice vlan {{ iface.voice_vlan }}
  {% endif %}
  
+ {# Security & Features #}
  device-tracking attach-policy {{ site_tracking_policy | default('SSC_IPDT') }}
  speed auto 100 1000
  no mdix auto
  spanning-tree portfast
  no shutdown
 
+ {# Authentication (Dot1x/MAB) #}
  {% if iface.auth_enabled %}
   authentication control-direction in
   authentication event fail retry 0 action authorize vlan {{ site_auth_fail_vlan }}
   authentication event server dead action authorize vlan {{ site_auth_server_dead_vlan }}
   authentication event server dead action authorize voice
   authentication event no-response action authorize vlan {{ site_auth_fail_vlan }}
+  authentication event server alive action reinitialize
   authentication host-mode multi-domain
   authentication port-control auto
   authentication periodic
@@ -87,6 +89,7 @@ interface {{ iface.name }}
   dot1x timeout supp-timeout {{ site_dot1x_supp_timeout | default(15) }}
  {% endif %}
  
+ {# QoS Policies #}
  {% if iface.qos_profile is defined and qos_policy_maps is defined and iface.qos_profile in qos_policy_maps %}
   service-policy input {{ qos_policy_maps[iface.qos_profile].input }}
   service-policy output {{ qos_policy_maps[iface.qos_profile].output }}
