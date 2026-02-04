@@ -1,27 +1,20 @@
 ---
-# PASS 1: Prepare Interface State (Mode & Encapsulation)
-# We execute this BEFORE the template to ensure the port accepts the commands.
+# PASS 1: Set Mode & Encapsulation First
 - name: "Pass 1: Enforce Interface Modes"
   cisco.ios.ios_config:
     lines:
-      # 1. Force port to Layer 2 (Fixes 'Invalid input' on Core Switches)
       - switchport
-      
-      # 2. Force Encapsulation (Fixes 'Auto' error on trunks)
       - "{% if item.mode == 'trunk' or item.mode == 'tagged' %}switchport trunk encapsulation dot1q{% endif %}"
-      
-      # 3. Apply Mode
       - switchport mode {{ item.mode }}
-      
-      # 4. Apply Portfast (Safe for access ports)
       - "{% if item.mode == 'access' %}spanning-tree portfast{% endif %}"
     parents: "interface {{ item.name }}"
   loop: "{{ interface_list }}"
   when: 
     - item.mode is defined 
     - item.mode in ['access', 'trunk', 'tagged']
+    - item.ipv4 is none  # Skip L3 ports
     - "'Vlan' not in item.name"
-  ignore_errors: yes # Ignore if already configured correctly
+  ignore_errors: yes
 
 # PASS 2: Apply Complete Configuration
 - name: "Pass 2: Apply Full Configuration Template"
