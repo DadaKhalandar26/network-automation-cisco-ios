@@ -54,9 +54,10 @@
       delegate_to: localhost
       run_once: false
 
-    - name: "Convert JSON String to Ansible List"
+    - name: "Finalize Interface List"
       set_fact:
-        interface_list: "{{ interface_list_json | from_json }}"
+        # FIX: Check if it is already a list before trying to parse it
+        interface_list: "{{ interface_list_json | from_json if interface_list_json is string else interface_list_json }}"
 
   # --- END NEW BLOCK ---
 
