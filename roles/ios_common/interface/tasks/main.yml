@@ -1,20 +1,21 @@
 ---
-# PASS 1: Set the Mode (Access/Trunk/Routed)
-# This prevents the "Interface mode must be specified" error
-- name: "Pass 1: Enforce Interface Modes"
+# PASS 1: Set Mode & Encapsulation
+- name: "Pass 1: Enforce Interface Modes (With Encapsulation)"
   cisco.ios.ios_config:
     lines:
+      # FIX: Force dot1q encapsulation for Trunks before setting mode
+      - "{% if item.mode == 'trunk' or item.mode == 'tagged' %}switchport trunk encapsulation dot1q{% endif %}"
       - switchport mode {{ item.mode }}
       - "{% if item.mode == 'access' %}spanning-tree portfast{% endif %}"
     parents: "interface {{ item.name }}"
   loop: "{{ interface_list | default([]) }}"
   when: 
     - item.mode is defined 
-    - item.mode in ['access', 'trunk']
+    - item.mode in ['access', 'trunk', 'tagged']
     - "'Vlan' not in item.name"
-  ignore_errors: yes # Ignore if port is already in correct mode
+  ignore_errors: yes # Safety: If switch is already in correct state or rejects cmd
 
-# PASS 2: Apply the Full Configuration
+# PASS 2: Apply Full Config
 - name: "Pass 2: Apply Full Configuration Template"
   cisco.ios.ios_config:
     src: "universal_interface.j2"
