@@ -26,23 +26,30 @@ interface {{ iface.name }}
  description {{ iface.description }}
 
 {# --- ROLE 1: ROUTED PORT (Layer 3) --- #}
+{% for iface in interface_list %}
+!
+interface {{ iface.name }}
+ {# FIX: Only write description if it is not empty #}
+ {% if iface.description | length > 0 %}
+ description {{ iface.description }}
+ {% endif %}
+
+{# --- LAYER 3 --- #}
 {% if iface.ipv4 and 'Vlan' not in iface.name %}
- {% set ip_val = iface.ipv4.split('/')[0] %}
- {% set cidr_val = iface.ipv4.split('/')[1] %}
  no switchport
- ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
+ ip address {{ iface.ipv4.split('/')[0] }} 255.255.255.0
  no shutdown
 
-{# --- ROLE 2: SVI (Vlan Interface) --- #}
+{# --- SVI --- #}
 {% elif iface.ipv4 and 'Vlan' in iface.name %}
- {% set ip_val = iface.ipv4.split('/')[0] %}
- {% set cidr_val = iface.ipv4.split('/')[1] %}
- ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
+ ip address {{ iface.ipv4.split('/')[0] }} 255.255.255.0
  no shutdown
 
-{# --- ROLE 3: TRUNK / UPLINK --- #}
+{# --- TRUNK --- #}
 {% elif iface.mode == 'tagged' or iface.mode == 'trunk' %}
  switchport
+ {# FIX: Set Encapsulation #}
+ switchport trunk encapsulation dot1q
  switchport mode trunk
  {% if iface.trunk_vlans %}
  switchport trunk allowed vlan {{ iface.trunk_vlans }}
@@ -52,7 +59,7 @@ interface {{ iface.name }}
  {% endif %}
  no shutdown
 
-{# --- ROLE 4: ACCESS PORT --- #}
+{# --- ACCESS --- #}
 {% else %}
  switchport
  switchport mode access
@@ -89,6 +96,10 @@ interface {{ iface.name }}
   service-policy input {{ qos_policy_maps[iface.qos_profile].input }}
   service-policy output {{ qos_policy_maps[iface.qos_profile].output }}
  {% endif %}
+
+{% endif %}
+!
+{% endfor %}
 
 {% endif %}
 !
