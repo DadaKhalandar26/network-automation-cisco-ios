@@ -9,14 +9,13 @@
     - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
     - "{{ playbook_dir }}/../../group_vars/all.yml"
 
-# --- NEW: GENERATE VARIABLES DYNAMICALLY ---
   pre_tasks:
     - name: "Fix Ansible Host (Convert Dict to String)"
       set_fact:
         ansible_host: "{{ primary_ip4 }}"
       when: ansible_host is mapping
 
-    - name: "Build Interface List JSON"
+    - name: "Build Interface List JSON (Safe Mode)"
       set_fact:
         interface_list_json: |
           [
@@ -45,7 +44,6 @@
             }{{ ',' if not loop.last else '' }}
             {% endfor %}
           ]
-      # REMOVED delegate_to: localhost (This fixes the 'Skipping' issue)
       run_once: false
 
     - name: "Finalize Interface List"
