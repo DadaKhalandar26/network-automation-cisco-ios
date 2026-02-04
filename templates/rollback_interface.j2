@@ -1,36 +1,23 @@
 {% for iface in interface_list %}
 
-{# ================================================================= #}
-{# SAFETY GUARD: DO NOT WIPE MANAGEMENT INTERFACES                   #}
-{# ================================================================= #}
+{# --- Define Safety Conditions --- #}
+{% set is_core_mgmt = ('device_roles_core_distribution_switch' in group_names and iface.name == 'Ethernet0/0') %}
+{% set is_access_mgmt = ('device_roles_user_access_switch' in group_names and iface.name == 'vlan 10') %}
 
-{# 1. Protect Core Switch Mgmt Port (Ethernet0/0) #}
-{% if 'device_roles_core_distribution_switch' in group_names and iface.name == 'Ethernet0/0' %}
-  {# SAFETY: Skip this iteration immediately. Do not generate config. #}
-  {% continue %}
-{% endif %}
+{# --- ONLY Generate Config if it is NOT a Protected Interface --- #}
+{% if not is_core_mgmt and not is_access_mgmt %}
 
-{# 2. Protect Access Switch Mgmt SVI (vlan 10) #}
-{% if 'device_roles_user_access_switch' in group_names and iface.name == 'vlan 10' %}
-  {# SAFETY: Skip this iteration immediately. #}
-  {% continue %}
-{% endif %}
+  {# --- Logic: Remove SVIs, Default Physical Ports --- #}
+  {% if 'vlan' in iface.name | lower or 'Vlan' in iface.name %}
+   ! Removing SVI {{ iface.name }}
+   no interface {{ iface.name }}
+  {% else %}
+   ! Defaulting Physical Interface {{ iface.name }}
+   default interface {{ iface.name }}
+   interface {{ iface.name }}
+    no shutdown
+  {% endif %}
 
-{# ================================================================= #}
-{# ROLLBACK ACTION                                                   #}
-{# ================================================================= #}
-
-{# Logic: If it is a VLAN Interface (SVI), delete it entirely. #}
-{#        If it is a Physical Interface, reset it to default.  #}
-
-{% if 'vlan' in iface.name | lower or 'Vlan' in iface.name %}
- ! Removing SVI {{ iface.name }}
- no interface {{ iface.name }}
-{% else %}
- ! Defaulting Physical Interface {{ iface.name }}
- default interface {{ iface.name }}
- interface {{ iface.name }}
-  no shutdown
 {% endif %}
 
 {% endfor %}
