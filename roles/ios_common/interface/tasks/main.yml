@@ -1,20 +1,20 @@
 ---
-# PASS 1: Enforce Mode (Access/Trunk Only)
-# We skip 'routed' and 'svi' roles here to prevent conflicts.
+# PASS 1: Enforce Mode (Only for L2 ports: Access/Trunk)
+# We SKIP 'routed' and 'svi' here to prevent the 'no switchport' crash on Core Switches
 - name: "Pass 1: Enforce Interface Modes"
   cisco.ios.ios_config:
     lines:
       - switchport
       - "{% if item.role == 'trunk' %}switchport trunk encapsulation dot1q{% endif %}"
-      - switchport mode {{ item.role }}
+      - switchport mode {{ item.role if item.role == 'trunk' else 'access' }}
       - "{% if item.role == 'access' %}spanning-tree portfast{% endif %}"
     parents: "interface {{ item.name }}"
   loop: "{{ interface_list }}"
   when: 
     - item.role in ['access', 'trunk']
-  ignore_errors: yes 
+  ignore_errors: yes
 
-# PASS 2: Apply Full Configuration
+# PASS 2: Apply Full Config
 - name: "Pass 2: Apply Full Configuration Template"
   cisco.ios.ios_config:
     src: "universal_interface.j2"
