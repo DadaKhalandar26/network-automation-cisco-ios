@@ -1,5 +1,7 @@
 ---
-# PASS 1: Set Mode & Encapsulation First
+# PASS 1: Enforce Mode & Encapsulation
+# We allow this to fail (ignore_errors) because L3 ports will reject 'switchport' commands,
+# but we want to proceed to the main template which handles L3 ports correctly.
 - name: "Pass 1: Enforce Interface Modes"
   cisco.ios.ios_config:
     lines:
@@ -12,11 +14,11 @@
   when: 
     - item.mode is defined 
     - item.mode in ['access', 'trunk', 'tagged']
-    - item.ipv4 is none  # Skip L3 ports
+    - item.ipv4 is none
     - "'Vlan' not in item.name"
-  ignore_errors: yes
+  ignore_errors: yes 
 
-# PASS 2: Apply Complete Configuration
+# PASS 2: Apply Full Configuration Template
 - name: "Pass 2: Apply Full Configuration Template"
   cisco.ios.ios_config:
     src: "universal_interface.j2"
