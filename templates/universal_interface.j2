@@ -16,10 +16,14 @@ interface {{ iface.name }}
  {% endif %}
 
 {# ========================================================= #}
-{# ROLE: ROUTED (Only runs if explicitly set to 'routed')    #}
+{# ROLE 1: ROUTED PORT (L3)                                  #}
 {# ========================================================= #}
 {% if iface.role == 'routed' %}
+ {# FIX: Skip 'no switchport' only for Core Distribution Switches #}
+ {% if 'device_roles_core_distribution_switch' not in group_names %}
  no switchport
+ {% endif %}
+ 
  {% if iface.ipv4 %}
   {% set ip_parts = iface.ipv4.split('/') %}
   ip address {{ ip_parts[0] }} {{ netmask_map[ip_parts[1]] | default('255.255.255.0') }}
@@ -27,7 +31,7 @@ interface {{ iface.name }}
  no shutdown
 
 {# ========================================================= #}
-{# ROLE: SVI (Vlan Interface)                                #}
+{# ROLE 2: SVI (Vlan Interface)                              #}
 {# ========================================================= #}
 {% elif iface.role == 'svi' %}
  {% if iface.ipv4 %}
@@ -37,7 +41,7 @@ interface {{ iface.name }}
  no shutdown
 
 {# ========================================================= #}
-{# ROLE: TRUNK (Uplinks)                                     #}
+{# ROLE 3: TRUNK / UPLINK                                    #}
 {# ========================================================= #}
 {% elif iface.role == 'trunk' %}
  switchport
@@ -52,7 +56,7 @@ interface {{ iface.name }}
  no shutdown
 
 {# ========================================================= #}
-{# ROLE: ACCESS (Default User Port)                          #}
+{# ROLE 4: ACCESS PORT (Default)                             #}
 {# ========================================================= #}
 {% else %}
  switchport
