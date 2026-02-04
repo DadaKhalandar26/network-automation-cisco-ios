@@ -18,22 +18,23 @@ group_by:
   - tenants
 
 compose:
-  # Use primary_ip4 directly to avoid 'netaddr' library dependency issues
+  # 1. Fix ansible_host to be a string, not a dictionary
   ansible_host: primary_ip4
 
-  # IMPORTANT: Indentation fixed here (2 spaces). It must be UNDER 'compose'
+  # 2. Create the interface list (INDENTATION IS CRITICAL HERE)
   interface_list: >-
     interfaces | default([]) | map('combine', {
       'name': name,
       'description': description | default('Managed by Ansible'),
       'enabled': enabled,
       
-      # Logic: Use Custom Field -> Fallback to Native Mode -> Default to Access
+      # Logic: Custom Field -> Native Mode -> Default Access
       'mode': (custom_fields.switchport_mode.value if custom_fields.switchport_mode is mapping else custom_fields.switchport_mode) 
                | default(mode.value if mode else 'access'),
       
-      # Find the IP for this interface
-      'ipv4': (ip_addresses | selectattr('interface.name', 'equalto', name) | map(attribute='address') | first | default(None)),
+      # SIMPLIFIED IP LOGIC:
+      # We check the local 'ip_addresses' list inside the interface object
+      'ipv4': (ip_addresses | map(attribute='address') | first | default(None)),
       
       # VLANs
       'access_vlan': (untagged_vlan.vid if untagged_vlan else None),
