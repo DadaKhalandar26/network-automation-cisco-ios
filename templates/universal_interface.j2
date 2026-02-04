@@ -1,25 +1,3 @@
-{# --- MACRO FOR CIDR TO NETMASK CONVERSION (Workaround for missing netaddr) --- #}
-{% set netmask_map = {
-    '32': '255.255.255.255',
-    '31': '255.255.255.254',
-    '30': '255.255.255.252',
-    '29': '255.255.255.248',
-    '28': '255.255.255.240',
-    '27': '255.255.255.224',
-    '26': '255.255.255.192',
-    '25': '255.255.255.128',
-    '24': '255.255.255.0',
-    '23': '255.255.254.0',
-    '22': '255.255.252.0',
-    '21': '255.255.248.0',
-    '20': '255.255.240.0',
-    '19': '255.255.224.0',
-    '18': '255.255.192.0',
-    '17': '255.255.128.0',
-    '16': '255.255.0.0',
-    '8':  '255.0.0.0'
-} %}
-
 {% for iface in interface_list %}
 !
 interface {{ iface.name }}
@@ -27,7 +5,7 @@ interface {{ iface.name }}
  description {{ iface.description }}
  {% endif %}
 
-{# --- ROLE 1: ROUTED PORT (Layer 3 - Has IP, No Vlan in Name) --- #}
+{# --- ROLE 1: ROUTED PORT (Layer 3) --- #}
 {% if iface.ipv4 and 'Vlan' not in iface.name %}
  no switchport
  ip address {{ iface.ipv4.split('/')[0] }} 255.255.255.0
@@ -55,21 +33,21 @@ interface {{ iface.name }}
 {% else %}
  switchport
  switchport mode access
- {% if iface.access_vlan %}
+ 
+ {% if iface.access_vlan and iface.access_vlan is not none %}
  switchport access vlan {{ iface.access_vlan }}
  {% endif %}
- {% if iface.voice_vlan %}
+ 
+ {% if iface.voice_vlan and iface.voice_vlan is not none %}
  switchport voice vlan {{ iface.voice_vlan }}
  {% endif %}
  
- {# Security & Features #}
  device-tracking attach-policy {{ site_tracking_policy | default('SSC_IPDT') }}
- speed auto 100 1000
+ speed auto
  no mdix auto
  spanning-tree portfast
  no shutdown
 
- {# Authentication (Dot1x/MAB) #}
  {% if iface.auth_enabled %}
   authentication control-direction in
   authentication event fail retry 0 action authorize vlan {{ site_auth_fail_vlan }}
@@ -89,7 +67,6 @@ interface {{ iface.name }}
   dot1x timeout supp-timeout {{ site_dot1x_supp_timeout | default(15) }}
  {% endif %}
  
- {# QoS Policies #}
  {% if iface.qos_profile is defined and qos_policy_maps is defined and iface.qos_profile in qos_policy_maps %}
   service-policy input {{ qos_policy_maps[iface.qos_profile].input }}
   service-policy output {{ qos_policy_maps[iface.qos_profile].output }}
