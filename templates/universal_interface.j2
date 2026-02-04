@@ -16,30 +16,28 @@ interface {{ iface.name }}
  {% endif %}
 
 {# ========================================================= #}
-{# ROLE 1: ROUTED PORT (Only if explicitly set to 'routed')  #}
+{# ROLE: ROUTED (Only runs if explicitly set to 'routed')    #}
 {# ========================================================= #}
 {% if iface.role == 'routed' %}
  no switchport
  {% if iface.ipv4 %}
-  {% set ip_val = iface.ipv4.split('/')[0] %}
-  {% set cidr_val = iface.ipv4.split('/')[1] %}
-  ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
+  {% set ip_parts = iface.ipv4.split('/') %}
+  ip address {{ ip_parts[0] }} {{ netmask_map[ip_parts[1]] | default('255.255.255.0') }}
  {% endif %}
  no shutdown
 
 {# ========================================================= #}
-{# ROLE 2: SVI (Vlan Interface)                              #}
+{# ROLE: SVI (Vlan Interface)                                #}
 {# ========================================================= #}
 {% elif iface.role == 'svi' %}
  {% if iface.ipv4 %}
-  {% set ip_val = iface.ipv4.split('/')[0] %}
-  {% set cidr_val = iface.ipv4.split('/')[1] %}
-  ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
+  {% set ip_parts = iface.ipv4.split('/') %}
+  ip address {{ ip_parts[0] }} {{ netmask_map[ip_parts[1]] | default('255.255.255.0') }}
  {% endif %}
  no shutdown
 
 {# ========================================================= #}
-{# ROLE 3: TRUNK / UPLINK                                    #}
+{# ROLE: TRUNK (Uplinks)                                     #}
 {# ========================================================= #}
 {% elif iface.role == 'trunk' %}
  switchport
@@ -54,7 +52,7 @@ interface {{ iface.name }}
  no shutdown
 
 {# ========================================================= #}
-{# ROLE 4: ACCESS PORT (Default)                             #}
+{# ROLE: ACCESS (Default User Port)                          #}
 {# ========================================================= #}
 {% else %}
  switchport
@@ -78,11 +76,16 @@ interface {{ iface.name }}
   authentication event server dead action authorize voice
   authentication event no-response action authorize vlan {{ site_auth_fail_vlan }}
   authentication periodic
-  authentication timer reauthenticate {{ site_auth_reauth_timer | default(10000) }}
+  authentication timer reauthenticate {{ site_auth_reauth_timer | default(3600) }}
   mab
   dot1x pae authenticator
   dot1x timeout tx-period {{ site_dot1x_tx_period | default(9) }}
   dot1x timeout supp-timeout {{ site_dot1x_supp_timeout | default(15) }}
+ {% endif %}
+ 
+ {% if iface.qos_profile != 'default' and qos_policy_maps[iface.qos_profile] is defined %}
+  service-policy input {{ qos_policy_maps[iface.qos_profile].input }}
+  service-policy output {{ qos_policy_maps[iface.qos_profile].output }}
  {% endif %}
 
 {% endif %}
