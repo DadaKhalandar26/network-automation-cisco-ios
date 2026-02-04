@@ -1,6 +1,5 @@
 ---
 plugin: netbox.netbox.nb_inventory
-# api_endpoint: http://192.168.29.200:8000/ #-- HYD
 api_endpoint: http://192.168.29.182:8000/
 token: "{{ lookup('env', 'NETBOX_TOKEN') }}"
 validate_certs: true
@@ -18,29 +17,35 @@ group_by:
   - tenants
 
 compose:
-  # 1. Fix ansible_host to be a string, not a dictionary
-  ansible_host: primary_ip4
+  # 1. Force string conversion to prevent Dict errors
+  ansible_host: "{{ primary_ip4 }}"
+  
+  # 2. Debug Variable (Check for this in AWX to prove compose is running)
+  compose_check: "Success"
 
-  # 2. Create the interface list (INDENTATION IS CRITICAL HERE)
+  # 3. Robust Logic using Pythonic Syntax (Safe for empty lists/nulls)
   interface_list: >-
     interfaces | default([]) | map('combine', {
       'name': name,
       'description': description | default('Managed by Ansible'),
       'enabled': enabled,
       
-      # Logic: Custom Field -> Native Mode -> Default Access
-      'mode': (custom_fields.switchport_mode.value if custom_fields.switchport_mode is mapping else custom_fields.switchport_mode) 
-               | default(mode.value if mode else 'access'),
+      # Logic: Custom Field -> Fallback to NetBox Mode -> Default to 'access'
+      # Checks if custom_fields.switchport_mode exists before using it
+      'mode': (
+        custom_fields.switchport_mode.value 
+        if (custom_fields.switchport_mode is defined and custom_fields.switchport_mode is mapping) 
+        else custom_fields.switchport_mode
+      ) | default(mode.value if mode else 'access'),
       
-      # SIMPLIFIED IP LOGIC:
-      # We check the local 'ip_addresses' list inside the interface object
-      'ipv4': (ip_addresses | map(attribute='address') | first | default(None)),
+      # Logic: Safer IP Lookup (Uses list index 0 if list exists)
+      'ipv4': (ip_addresses[0].address if ip_addresses else None),
       
       # VLANs
       'access_vlan': (untagged_vlan.vid if untagged_vlan else None),
       'voice_vlan': custom_fields.voice_vlan | default(None),
       'trunk_vlans': (tagged_vlans | map(attribute='vid') | join(',') if tagged_vlans else None),
-      'native_vlan': (untagged_vlan.vid if mode is defined and mode.value == 'tagged' and untagged_vlan else None),
+      'native_vlan': (untagged_vlan.vid if (mode is defined and mode.value == 'tagged' and untagged_vlan) else None),
 
       # Features
       'auth_enabled': custom_fields.auth_enable | default(false),
