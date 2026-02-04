@@ -1,4 +1,4 @@
-{# --- MAP: CIDR to Netmask Conversion --- #}
+{# --- MAP: Convert CIDR to Subnet Mask --- #}
 {% set netmask_map = {
     '32': '255.255.255.255', '31': '255.255.255.254', '30': '255.255.255.252',
     '29': '255.255.255.248', '28': '255.255.255.240', '27': '255.255.255.224',
@@ -15,30 +15,32 @@ interface {{ iface.name }}
  description {{ iface.description }}
  {% endif %}
 
-{# ========================================== #}
-{# ROLE: ROUTED (L3 Port - e.g. Uplinks)      #}
-{# ========================================== #}
+{# ========================================================= #}
+{# ROLE 1: ROUTED PORT (Only if explicitly set to 'routed')  #}
+{# ========================================================= #}
 {% if iface.role == 'routed' %}
  no switchport
  {% if iface.ipv4 %}
-  {% set ip_parts = iface.ipv4.split('/') %}
-  ip address {{ ip_parts[0] }} {{ netmask_map[ip_parts[1]] | default('255.255.255.0') }}
+  {% set ip_val = iface.ipv4.split('/')[0] %}
+  {% set cidr_val = iface.ipv4.split('/')[1] %}
+  ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
  {% endif %}
  no shutdown
 
-{# ========================================== #}
-{# ROLE: SVI (Vlan Interface)                 #}
-{# ========================================== #}
+{# ========================================================= #}
+{# ROLE 2: SVI (Vlan Interface)                              #}
+{# ========================================================= #}
 {% elif iface.role == 'svi' %}
  {% if iface.ipv4 %}
-  {% set ip_parts = iface.ipv4.split('/') %}
-  ip address {{ ip_parts[0] }} {{ netmask_map[ip_parts[1]] | default('255.255.255.0') }}
+  {% set ip_val = iface.ipv4.split('/')[0] %}
+  {% set cidr_val = iface.ipv4.split('/')[1] %}
+  ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
  {% endif %}
  no shutdown
 
-{# ========================================== #}
-{# ROLE: TRUNK (L2 Uplinks)                   #}
-{# ========================================== #}
+{# ========================================================= #}
+{# ROLE 3: TRUNK / UPLINK                                    #}
+{# ========================================================= #}
 {% elif iface.role == 'trunk' %}
  switchport
  switchport trunk encapsulation dot1q
@@ -51,20 +53,21 @@ interface {{ iface.name }}
  {% endif %}
  no shutdown
 
-{# ========================================== #}
-{# ROLE: ACCESS (User Ports - DEFAULT)        #}
-{# ========================================== #}
+{# ========================================================= #}
+{# ROLE 4: ACCESS PORT (Default)                             #}
+{# ========================================================= #}
 {% else %}
  switchport
  switchport mode access
+ 
  {% if iface.access_vlan %}
  switchport access vlan {{ iface.access_vlan }}
  {% endif %}
+ 
  {% if iface.voice_vlan %}
  switchport voice vlan {{ iface.voice_vlan }}
  {% endif %}
  
- device-tracking attach-policy {{ site_tracking_policy | default('SSC_IPDT') }}
  spanning-tree portfast
  no shutdown
 
@@ -75,16 +78,11 @@ interface {{ iface.name }}
   authentication event server dead action authorize voice
   authentication event no-response action authorize vlan {{ site_auth_fail_vlan }}
   authentication periodic
-  authentication timer reauthenticate {{ site_auth_reauth_timer | default(3600) }}
+  authentication timer reauthenticate {{ site_auth_reauth_timer | default(10000) }}
   mab
   dot1x pae authenticator
   dot1x timeout tx-period {{ site_dot1x_tx_period | default(9) }}
   dot1x timeout supp-timeout {{ site_dot1x_supp_timeout | default(15) }}
- {% endif %}
- 
- {% if iface.qos_profile != 'default' and qos_policy_maps[iface.qos_profile] is defined %}
-  service-policy input {{ qos_policy_maps[iface.qos_profile].input }}
-  service-policy output {{ qos_policy_maps[iface.qos_profile].output }}
  {% endif %}
 
 {% endif %}
