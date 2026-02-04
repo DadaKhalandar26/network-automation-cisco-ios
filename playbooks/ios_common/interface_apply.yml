@@ -10,15 +10,16 @@
     - "{{ playbook_dir }}/../../group_vars/all.yml"
 
 # --- NEW: GENERATE VARIABLES DYNAMICALLY ---
+# --- NEW: ROBUST VARIABLE GENERATION ---
   pre_tasks:
     - name: "Fix Ansible Host (Convert Dict to String)"
       set_fact:
         ansible_host: "{{ primary_ip4 }}"
       when: ansible_host is mapping
 
-    - name: "Build Interface List from NetBox Data"
+    - name: "Build Interface List JSON"
       set_fact:
-        interface_list: |
+        interface_list_json: |
           [
             {% for item in interfaces %}
             {
@@ -26,7 +27,7 @@
               "description": "{{ item.description | default('Managed by Ansible') }}",
               "enabled": {{ item.enabled | default(true) | lower }},
               
-              {# --- LOGIC: Handle 'trunk, Trunk' vs 'trunk' vs Object --- #}
+              {# --- MODE LOGIC --- #}
               {% set raw_mode = item.custom_fields.switchport_mode %}
               {% if raw_mode is mapping %}
                 "mode": "{{ raw_mode.value | default('access') }}",
@@ -39,11 +40,16 @@
               {# --- IP ADDRESS --- #}
               "ipv4": "{{ item.ip_addresses[0].address if item.ip_addresses else '' }}",
 
-              {# --- VLANs --- #}
+              {# --- VLANs (With Safety Checks) --- #}
               "access_vlan": {{ item.untagged_vlan.vid if item.untagged_vlan else 'null' }},
-              "voice_vlan": {{ item.custom_fields.voice_vlan | default('null') }},
+              
+              {# FIX 1: Handle Voice VLAN Null Safety #}
+              "voice_vlan": {{ item.custom_fields.voice_vlan if item.custom_fields.voice_vlan else 'null' }},
+              
               "trunk_vlans": "{{ item.tagged_vlans | map(attribute='vid') | join(',') }}",
-              "native_vlan": {{ item.untagged_vlan.vid if (item.mode and item.mode.value == 'tagged') else 'null' }},
+              
+              {# FIX 2: Check if untagged_vlan exists before accessing .vid for Trunks #}
+              "native_vlan": {{ item.untagged_vlan.vid if (item.mode and item.mode.value == 'tagged' and item.untagged_vlan) else 'null' }},
 
               {# --- FEATURES --- #}
               "auth_enabled": {{ item.custom_fields.auth_enable | default(false) | lower }},
@@ -53,6 +59,11 @@
           ]
       delegate_to: localhost
       run_once: false
+
+    - name: "Convert JSON String to Ansible List"
+      set_fact:
+        # FIX 3: Explicitly convert the text block into a usable List
+        interface_list: "{{ interface_list_json | from_json }}"
 
   # --- END NEW BLOCK ---
 
