@@ -50,10 +50,11 @@
     - name: "Reset Interfaces to Default Configuration"
       cisco.ios.ios_config:
         # FIX: '../' moves up from 'playbooks/' to Project Root, then into 'templates/'
-        src: "/../../templates/rollback_interface.j2"
+        src: "rollback_interface.j2"
       register: rollback_result
 
     - name: "Display Rollback Changes"
       debug:
         var: rollback_result.updates
+
 
