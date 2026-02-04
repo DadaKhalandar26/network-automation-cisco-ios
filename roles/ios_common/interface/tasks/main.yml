@@ -1,29 +1,25 @@
 ---
-# PASS 1: Enforce Mode & Encapsulation
-# We allow this to fail (ignore_errors) because L3 ports will reject 'switchport' commands,
-# but we want to proceed to the main template which handles L3 ports correctly.
+# PASS 1: Enforce Mode (Access/Trunk Only)
+# We skip 'routed' and 'svi' roles here to prevent conflicts.
 - name: "Pass 1: Enforce Interface Modes"
   cisco.ios.ios_config:
     lines:
       - switchport
-      - "{% if item.mode == 'trunk' or item.mode == 'tagged' %}switchport trunk encapsulation dot1q{% endif %}"
-      - switchport mode {{ item.mode }}
-      - "{% if item.mode == 'access' %}spanning-tree portfast{% endif %}"
+      - "{% if item.role == 'trunk' %}switchport trunk encapsulation dot1q{% endif %}"
+      - switchport mode {{ item.role }}
+      - "{% if item.role == 'access' %}spanning-tree portfast{% endif %}"
     parents: "interface {{ item.name }}"
   loop: "{{ interface_list }}"
   when: 
-    - item.mode is defined 
-    - item.mode in ['access', 'trunk', 'tagged']
-    - item.ipv4 is none
-    - "'Vlan' not in item.name"
+    - item.role in ['access', 'trunk']
   ignore_errors: yes 
 
-# PASS 2: Apply Full Configuration Template
+# PASS 2: Apply Full Configuration
 - name: "Pass 2: Apply Full Configuration Template"
   cisco.ios.ios_config:
     src: "universal_interface.j2"
   register: deploy_result
 
-- name: Display Interface Changes
+- name: Display Changes
   debug:
     var: deploy_result.updates
