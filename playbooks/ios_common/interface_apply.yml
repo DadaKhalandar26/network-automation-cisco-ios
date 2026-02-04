@@ -9,5 +9,52 @@
     - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
     - "{{ playbook_dir }}/../../group_vars/all.yml"
 
+# --- NEW: GENERATE VARIABLES DYNAMICALLY ---
+  pre_tasks:
+    - name: "Fix Ansible Host (Convert Dict to String)"
+      set_fact:
+        ansible_host: "{{ primary_ip4 }}"
+      when: ansible_host is mapping
+
+    - name: "Build Interface List from NetBox Data"
+      set_fact:
+        interface_list: |
+          [
+            {% for item in interfaces %}
+            {
+              "name": "{{ item.name }}",
+              "description": "{{ item.description | default('Managed by Ansible') }}",
+              "enabled": {{ item.enabled | default(true) | lower }},
+              
+              {# --- LOGIC: Handle 'trunk, Trunk' vs 'trunk' vs Object --- #}
+              {% set raw_mode = item.custom_fields.switchport_mode %}
+              {% if raw_mode is mapping %}
+                "mode": "{{ raw_mode.value | default('access') }}",
+              {% elif raw_mode is string %}
+                "mode": "{{ raw_mode.split(',')[0] | trim }}",
+              {% else %}
+                "mode": "{{ item.mode.value if item.mode else 'access' }}",
+              {% endif %}
+
+              {# --- IP ADDRESS --- #}
+              "ipv4": "{{ item.ip_addresses[0].address if item.ip_addresses else '' }}",
+
+              {# --- VLANs --- #}
+              "access_vlan": {{ item.untagged_vlan.vid if item.untagged_vlan else 'null' }},
+              "voice_vlan": {{ item.custom_fields.voice_vlan | default('null') }},
+              "trunk_vlans": "{{ item.tagged_vlans | map(attribute='vid') | join(',') }}",
+              "native_vlan": {{ item.untagged_vlan.vid if (item.mode and item.mode.value == 'tagged') else 'null' }},
+
+              {# --- FEATURES --- #}
+              "auth_enabled": {{ item.custom_fields.auth_enable | default(false) | lower }},
+              "qos_profile": "{{ item.custom_fields.qos_profile | default('default') }}"
+            }{{ ',' if not loop.last else '' }}
+            {% endfor %}
+          ]
+      delegate_to: localhost
+      run_once: false
+
+  # --- END NEW BLOCK ---
+
   roles:
     - ios_common/interface
