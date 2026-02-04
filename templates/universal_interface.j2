@@ -1,4 +1,4 @@
-{# --- MAP: Convert CIDR to Subnet Mask (Since 'ipaddr' filter is missing) --- #}
+{# --- MAP: Convert CIDR to Subnet Mask (Fixes IP Overlap) --- #}
 {% set netmask_map = {
     '32': '255.255.255.255',
     '31': '255.255.255.254',
@@ -29,17 +29,18 @@ interface {{ iface.name }}
 
 {# --- ROLE 1: ROUTED PORT (Layer 3) --- #}
 {% if iface.ipv4 and 'Vlan' not in iface.name %}
- {% set ip_addr = iface.ipv4.split('/')[0] %}
- {% set cidr = iface.ipv4.split('/')[1] %}
+ {# Try L3 config. If switch is L2-only, this line might error but we proceed #}
  no switchport
- ip address {{ ip_addr }} {{ netmask_map[cidr] | default('255.255.255.0') }}
+ {% set ip_val = iface.ipv4.split('/')[0] %}
+ {% set cidr_val = iface.ipv4.split('/')[1] %}
+ ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
  no shutdown
 
 {# --- ROLE 2: SVI (Vlan Interface) --- #}
 {% elif iface.ipv4 and 'Vlan' in iface.name %}
- {% set ip_addr = iface.ipv4.split('/')[0] %}
- {% set cidr = iface.ipv4.split('/')[1] %}
- ip address {{ ip_addr }} {{ netmask_map[cidr] | default('255.255.255.0') }}
+ {% set ip_val = iface.ipv4.split('/')[0] %}
+ {% set cidr_val = iface.ipv4.split('/')[1] %}
+ ip address {{ ip_val }} {{ netmask_map[cidr_val] | default('255.255.255.0') }}
  no shutdown
 
 {# --- ROLE 3: TRUNK / UPLINK --- #}
@@ -67,9 +68,6 @@ interface {{ iface.name }}
  {% if iface.voice_vlan and iface.voice_vlan is not none and iface.voice_vlan != 'null' %}
  switchport voice vlan {{ iface.voice_vlan }}
  {% endif %}
- 
- device-tracking attach-policy {{ site_tracking_policy | default('SSC_IPDT') }}
- no mdix auto
  spanning-tree portfast
  no shutdown
 
@@ -79,22 +77,12 @@ interface {{ iface.name }}
   authentication event server dead action authorize vlan {{ site_auth_server_dead_vlan }}
   authentication event server dead action authorize voice
   authentication event no-response action authorize vlan {{ site_auth_fail_vlan }}
-  authentication event server alive action reinitialize
-  authentication host-mode multi-domain
-  authentication port-control auto
   authentication periodic
-  authentication timer reauthenticate {{ site_auth_reauth_timer | default(3600) }}
+  authentication timer reauthenticate {{ site_auth_reauth_timer | default(10000) }}
   mab
-  snmp trap mac-notification change added
-  snmp trap mac-notification change removed
   dot1x pae authenticator
   dot1x timeout tx-period {{ site_dot1x_tx_period | default(9) }}
   dot1x timeout supp-timeout {{ site_dot1x_supp_timeout | default(15) }}
- {% endif %}
- 
- {% if iface.qos_profile is defined and qos_policy_maps is defined and iface.qos_profile in qos_policy_maps %}
-  service-policy input {{ qos_policy_maps[iface.qos_profile].input }}
-  service-policy output {{ qos_policy_maps[iface.qos_profile].output }}
  {% endif %}
 
 {% endif %}
