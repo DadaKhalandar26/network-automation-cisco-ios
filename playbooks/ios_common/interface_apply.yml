@@ -10,12 +10,12 @@
     - "{{ playbook_dir }}/../../group_vars/all.yml"
 
   pre_tasks:
-    - name: "Fix Ansible Host (Convert Dict to String)"
+    - name: "Fix Ansible Host"
       set_fact:
         ansible_host: "{{ primary_ip4 }}"
       when: ansible_host is mapping
 
-    - name: "Build Interface List JSON (Safe Mode)"
+    - name: "Build Normalized Interface List"
       set_fact:
         interface_list_json: |
           [
@@ -25,24 +25,20 @@
               "description": {{ (item.description | default('Managed by Ansible')) | to_json }},
               "enabled": {{ (item.enabled | default(true)) | to_json }},
               
-              {# --- Resolve Mode (Trunk/Access) --- #}
-              {% set raw_mode = item.custom_fields.switchport_mode %}
-              {% if raw_mode is mapping %}
-                "mode": {{ (raw_mode.value | default('access')) | to_json }},
-              {% elif raw_mode is string %}
-                "mode": {{ (raw_mode.split(',')[0] | trim) | to_json }},
-              {% else %}
-                "mode": {{ ((item.mode.value if item.mode else 'access')) | to_json }},
-              {% endif %}
+              {# --- ROLE NORMALIZATION --- #}
+              {# Reads 'Interface_Role', defaults to 'access', converts to lowercase #}
+              "role": {{ (item.custom_fields.Interface_Role | default('access') | lower) | to_json }},
 
-              {# --- IP & VLANs (Safe Null Handling) --- #}
+              {# --- IP ADDRESS --- #}
               "ipv4": {{ (item.ip_addresses[0].address if item.ip_addresses else None) | to_json }},
+
+              {# --- VLANS --- #}
               "access_vlan": {{ (item.untagged_vlan.vid if item.untagged_vlan else None) | to_json }},
               "voice_vlan": {{ item.custom_fields.voice_vlan | to_json }},
               "trunk_vlans": {{ (item.tagged_vlans | map(attribute='vid') | join(',')) | to_json }},
               "native_vlan": {{ (item.untagged_vlan.vid if (item.mode and item.mode.value == 'tagged' and item.untagged_vlan) else None) | to_json }},
 
-              {# --- Features --- #}
+              {# --- FEATURES --- #}
               "auth_enabled": {{ (item.custom_fields.auth_enable | default(false)) | to_json }},
               "qos_profile": {{ (item.custom_fields.qos_profile | default('default')) | to_json }}
             }{{ ',' if not loop.last else '' }}
