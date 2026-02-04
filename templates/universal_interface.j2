@@ -1,3 +1,25 @@
+{# --- MAP: Convert CIDR to Subnet Mask (Since 'ipaddr' filter is missing) --- #}
+{% set netmask_map = {
+    '32': '255.255.255.255',
+    '31': '255.255.255.254',
+    '30': '255.255.255.252',
+    '29': '255.255.255.248',
+    '28': '255.255.255.240',
+    '27': '255.255.255.224',
+    '26': '255.255.255.192',
+    '25': '255.255.255.128',
+    '24': '255.255.255.0',
+    '23': '255.255.254.0',
+    '22': '255.255.252.0',
+    '21': '255.255.248.0',
+    '20': '255.255.240.0',
+    '19': '255.255.224.0',
+    '18': '255.255.192.0',
+    '17': '255.255.128.0',
+    '16': '255.255.0.0',
+    '8':  '255.0.0.0'
+} %}
+
 {% for iface in interface_list %}
 !
 interface {{ iface.name }}
@@ -7,14 +29,17 @@ interface {{ iface.name }}
 
 {# --- ROLE 1: ROUTED PORT (Layer 3) --- #}
 {% if iface.ipv4 and 'Vlan' not in iface.name %}
- {# Try L3 config, but typically requires L3 image #}
+ {% set ip_addr = iface.ipv4.split('/')[0] %}
+ {% set cidr = iface.ipv4.split('/')[1] %}
  no switchport
- ip address {{ iface.ipv4.split('/')[0] }} 255.255.255.0
+ ip address {{ ip_addr }} {{ netmask_map[cidr] | default('255.255.255.0') }}
  no shutdown
 
 {# --- ROLE 2: SVI (Vlan Interface) --- #}
 {% elif iface.ipv4 and 'Vlan' in iface.name %}
- ip address {{ iface.ipv4.split('/')[0] }} 255.255.255.0
+ {% set ip_addr = iface.ipv4.split('/')[0] %}
+ {% set cidr = iface.ipv4.split('/')[1] %}
+ ip address {{ ip_addr }} {{ netmask_map[cidr] | default('255.255.255.0') }}
  no shutdown
 
 {# --- ROLE 3: TRUNK / UPLINK --- #}
@@ -44,6 +69,7 @@ interface {{ iface.name }}
  {% endif %}
  
  device-tracking attach-policy {{ site_tracking_policy | default('SSC_IPDT') }}
+ no mdix auto
  spanning-tree portfast
  no shutdown
 
