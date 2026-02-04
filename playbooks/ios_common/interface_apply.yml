@@ -10,7 +10,7 @@
     - "{{ playbook_dir }}/../../group_vars/all.yml"
 
 # --- NEW: GENERATE VARIABLES DYNAMICALLY ---
-pre_tasks:
+  pre_tasks:
     - name: "Fix Ansible Host (Convert Dict to String)"
       set_fact:
         ansible_host: "{{ primary_ip4 }}"
