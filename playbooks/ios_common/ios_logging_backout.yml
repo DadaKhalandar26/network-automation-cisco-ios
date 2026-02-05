@@ -1,10 +1,36 @@
 ---
-- name: IOS | LOGGING BACK-OUT
+- name: MANUAL ROLLBACK - Remove Logging Configuration
   hosts: platforms_cisco-ios
   gather_facts: no
+  become: yes
+  become_method: enable
+
+  # Load variables (to know which IPs to remove)
+  vars_files:
+    - "{{ playbook_dir }}/../../group_vars/all.yml"
+    - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
+
+  vars:
+    # Safety variable (Default is NO)
+    perform_rollback: no
+
+  pre_tasks:
+    - name: "Safety Check"
+      fail:
+        msg: "YOU MUST PASS '-e perform_rollback=yes' TO RUN THIS DESTRUCTIVE PLAYBOOK."
+      when: not perform_rollback
 
   tasks:
-    - name: Back-out logging configuration
-      import_role:
-        name: ios_common
-        tasks_from: logging/backout.yml
+    - name: "Revert Logging Configuration"
+      cisco.ios.ios_config:
+        # Steps out of 'playbooks/' and into 'templates/'
+        src: "../templates/logging_rollback.j2"
+      register: rollback_result
+
+    - name: "Display Rollback Changes"
+      debug:
+        var: rollback_result.updates
+
+    - name: "Save Configuration"
+      cisco.ios.ios_config:
+        save_when: modified
