@@ -13,7 +13,13 @@ snmp-server view {{ snmp_view }} iso included
 {% endif %}
 
 ! --- Configure SNMP User (Common to All) ---
-snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3 auth {{ snmp_auth_algo }} {{ snmp_auth_key }} priv {{ snmp_priv_algo }} {{ snmp_priv_key }}
+{% if 'device_roles_user_access_switch' in group_names %}
+ ! Access Switches (Simplified Syntax - No Views)
+ snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3 auth {{ snmp_auth_algo }} {{ snmp_auth_key }}
+{% else %}
+ ! Core Switches (Full Syntax - With Views)
+ snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3 auth {{ snmp_auth_algo }} {{ snmp_auth_key }} priv {{ snmp_priv_algo }} {{ snmp_priv_key }}
+{% endif %}
 
 ! --- Configure Access List ---
 ip access-list standard {{ snmp_acl }}
