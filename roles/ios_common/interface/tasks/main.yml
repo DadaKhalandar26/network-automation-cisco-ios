@@ -23,3 +23,7 @@
 - name: Display Changes
   debug:
     var: deploy_result.updates
+
+- name: "Save Running Config to Startup Config"
+  cisco.ios.ios_config:
+    save_when: modified
