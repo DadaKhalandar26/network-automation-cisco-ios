@@ -1,7 +1,0 @@
-{% for loghost in logging_hosts | default([]) %}
-no logging host {{ loghost }}
-{% endfor %}
-
-{% if logging_source_interface is defined %}
-no logging source-interface {{ logging_source_interface }}
-{% endif %}
