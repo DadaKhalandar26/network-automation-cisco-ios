@@ -4,3 +4,7 @@
     banner: login
     text: "{{ lookup('file', playbook_dir + '/../../templates/banner.j2') }}"
     state: present
+
+- name: "Save Running Config to Startup Config"
+  cisco.ios.ios_config:
+    save_when: modified
