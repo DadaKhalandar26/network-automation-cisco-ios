@@ -1,60 +1,30 @@
 ---
-- name: MANUAL ROLLBACK - Default All Interfaces (Preserving Management)
-  hosts: 
-    - device_roles_user_access_switch
-    - device_roles_core_distribution_switch
+- name: Rollback VLANs (Remove VLANs defined in host_vars)
+  hosts: device_roles_user_access_switch
   gather_facts: no
-  become: yes
+  become: yes                 # essential for config mode
   become_method: enable
-
+  
   vars_files:
     - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
-    - "{{ playbook_dir }}/../../group_vars/all.yml"
-
-  vars:
-    # Safety variable to prevent accidental runs. 
-    # You must pass '-e perform_rollback=yes' to run this.
-    perform_rollback: no
-
-  pre_tasks:
-    - name: "Safety Check"
-      fail:
-        msg: "YOU MUST PASS '-e perform_rollback=yes' TO RUN THIS DESTRUCTIVE PLAYBOOK."
-      when: not perform_rollback
-
-    - name: "Fix Ansible Host"
-      set_fact:
-        ansible_host: "{{ primary_ip4 }}"
-      when: ansible_host is mapping
-
-    # We re-use the exact same logic to get the list of interfaces from NetBox
-    - name: "Build Interface List for Rollback"
-      set_fact:
-        interface_list_json: |
-          [
-            {% for item in interfaces %}
-            {
-              "name": {{ item.name | to_json }},
-              "description": {{ (item.description | default('')) | to_json }},
-              "role": {{ (item.custom_fields.Interface_Role | default('access') | lower) | to_json }}
-            }{{ ',' if not loop.last else '' }}
-            {% endfor %}
-          ]
-      run_once: false
-
-    - name: "Finalize Interface List"
-      set_fact:
-        interface_list: "{{ interface_list_json | from_json if interface_list_json is string else interface_list_json }}"
-
+    
   tasks:
-    - name: "Reset Interfaces to Default Configuration"
+    - name: Remove VLANs using ios_config
       cisco.ios.ios_config:
-        # FIX: '../' moves up from 'playbooks/' to Project Root, then into 'templates/'
-        src: "rollback_interface.j2"
+        lines:
+          - "no vlan {{ item.id }}"
+      loop: "{{ vlans }}"
+      when: 
+        - vlans is defined
+        - item.id != 10
       register: rollback_result
 
-    - name: "Display Rollback Changes"
+    - name: Verify Rollback (Show VLAN Brief)
+      cisco.ios.ios_command:
+        commands:
+          - show vlan brief
+      register: verify_output
+
+    - name: Display Verification
       debug:
-        var: rollback_result.updates
-
-
+        var: verify_output.stdout_lines
