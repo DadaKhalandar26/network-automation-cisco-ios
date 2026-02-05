@@ -1,8 +1,16 @@
-! ... [Timezone Config] ...
+! --- Configure Timezone ---
+clock timezone {{ timezone_name }} {{ timezone_offset_hours }} {{ timezone_offset_minutes }}
 
-! Configure NTP Source (Using Generic Variable)
-{% if source_interface is defined %}
+! --- Configure NTP Source ---
+{% if ntp_source_interface is defined %}
 ntp source {{ source_interface }}
 {% endif %}
 
-! ... [Server Config] ...
+! --- Configure NTP Servers ---
+{% for server in ntp_servers %}
+ntp server {{ server }}
+{% endfor %}
+
+! --- Optional: Sync Hardware Clock (Calendar) ---
+! (This command updates the BIOS clock)
+ntp update-calendar
