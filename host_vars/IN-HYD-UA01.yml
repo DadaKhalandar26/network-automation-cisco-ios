@@ -6,7 +6,7 @@ ansible_command_timeout: 120
 ansible_timeout: 60
 ansible_port: 22
 snmp_location: "Hyderabad"
-logging_source_interface: vlan 10
+source_interface: vlan 10
 site_auth_fail_vlan: 1000        # VLAN for failed auth
 site_auth_server_dead_vlan: 1000     # VLAN when RADIUS is down
 site_auth_no_response_vlan: 1000  # VLAN when device is silent
