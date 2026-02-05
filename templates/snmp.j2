@@ -6,7 +6,7 @@ snmp-server view {{ snmp_view }} iso included
 ! --- Configure SNMP Group ---
 {% if 'device_roles_user_access_switch' in group_names %}
  ! Access Switches (Simplified Syntax - No Views)
- snmp-server group {{ snmp_group_name }} v3 priv
+ snmp-server group {{ snmp_group_name }} v3 auth
 {% else %}
  ! Core Switches (Full Syntax - With Views)
  snmp-server group {{ snmp_group_name }} v3 priv read {{ snmp_view }}
