@@ -40,8 +40,13 @@ snmp-server enable traps ethernet evc
 snmp-server enable traps snmp
 
 ! --- Configure NMS Hosts ---
-{% for host in nms_hosts %}
-snmp-server host {{ host }} version 3 priv {{ snmp_user }}
+{% if 'device_roles_user_access_switch' in group_names %}
+ {% for host in nms_hosts %}
+  snmp-server host {{ host }} version 3 priv {{ snmp_user }}
+ {% else %}
+ {% for host in nms_hosts %}
+  snmp-server host {{ host }} version 3 priv {{ snmp_user }}
+ {% endfor %}
 {% endfor %}
 
 ! --- System Info ---
