@@ -22,9 +22,16 @@ no snmp-server community public RO {{ snmp_acl }}
 no snmp-server community private RW {{ snmp_acl }}
 
 ! --- Remove User and Group ---
-! (Removing the user and group usually doesn't require specifying auth/priv keywords)
 no snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3
-no snmp-server group {{ snmp_group_name }} v3
+
+{# FIX: Add specific keywords (auth/priv) to satisfy IOS syntax #}
+{% if 'device_roles_user_access_switch' in group_names %}
+ ! Access Switches (Auth)
+ no snmp-server group {{ snmp_group_name }} v3 auth
+{% else %}
+ ! Core Switches (Priv)
+ no snmp-server group {{ snmp_group_name }} v3 priv
+{% endif %}
 
 ! --- Remove Custom View (Core Only) ---
 {% if 'device_roles_core_distribution_switch' in group_names %}
