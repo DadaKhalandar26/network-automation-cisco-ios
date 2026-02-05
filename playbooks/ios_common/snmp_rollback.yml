@@ -21,7 +21,7 @@
   tasks:
     - name: "Revert SNMP Configuration"
       cisco.ios.ios_config:
-        src: "../templates/snmp_rollback.j2"
+        src: "snmp_rollback.j2"
       register: rollback_result
 
     - name: "Display Rollback Changes"
