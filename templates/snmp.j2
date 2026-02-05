@@ -39,6 +39,11 @@ snmp-server enable traps ospf
 snmp-server enable traps ethernet evc
 snmp-server enable traps snmp
 
+! Set Source Interface for Traps
+{% if source_interface is defined %}
+snmp-server trap-source {{ source_interface }}
+{% endif %}
+
 ! --- Configure NMS Hosts ---
 {% if 'device_roles_user_access_switch' in group_names %}
  ! Access Switches (Send Traps using Auth level)
