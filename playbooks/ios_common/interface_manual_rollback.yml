@@ -10,8 +10,6 @@
     - "{{ playbook_dir }}/../../group_vars/all.yml"
 
   vars:
-    # Safety variable to prevent accidental runs. 
-    # You must pass '-e perform_rollback=yes' to run this.
     perform_rollback: no
 
   pre_tasks:
@@ -25,7 +23,6 @@
         ansible_host: "{{ primary_ip4 }}"
       when: ansible_host is mapping
 
-    # We re-use the exact same logic to get the list of interfaces from NetBox
     - name: "Build Interface List for Rollback"
       set_fact:
         interface_list_json: |
@@ -47,12 +44,14 @@
   tasks:
     - name: "Reset Interfaces to Default Configuration"
       cisco.ios.ios_config:
-        # FIX: '../' moves up from 'playbooks/' to Project Root, then into 'templates/'
-        src: "rollback_interface.j2"
+        # FIX: Point to the correct folder relative to this playbook
+        src: "../templates/rollback_interface.j2"
       register: rollback_result
 
     - name: "Display Rollback Changes"
       debug:
         var: rollback_result.updates
 
-
+    - name: "Save Configuration"
+      cisco.ios.ios_config:
+        save_when: modified
