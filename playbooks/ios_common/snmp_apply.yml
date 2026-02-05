@@ -8,11 +8,12 @@
   # Load variables
   vars_files:
     - "{{ playbook_dir }}/../../group_vars/all.yml"
+    - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
 
   tasks:
     - name: "Apply SNMP Configuration"
       cisco.ios.ios_config:
-        src: "../templates/snmp.j2"
+        src: "snmp.j2"
       register: snmp_result
 
     - name: "Display Changes"
