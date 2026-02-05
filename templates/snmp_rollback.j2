@@ -17,6 +17,11 @@ no snmp-server enable traps ospf
 no snmp-server enable traps ethernet evc
 no snmp-server enable traps snmp
 
+! remove Source Interface for Traps
+{% if source_interface is defined %}
+no snmp-server trap-source {{ source_interface }}
+{% endif %}
+
 ! --- Remove Communities ---
 no snmp-server community public RO {{ snmp_acl }}
 no snmp-server community private RW {{ snmp_acl }}
