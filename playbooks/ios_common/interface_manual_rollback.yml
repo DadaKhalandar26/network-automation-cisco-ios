@@ -1,8 +1,6 @@
 ---
 - name: MANUAL ROLLBACK - Default All Interfaces (Preserving Management)
-  hosts: 
-    - device_roles_user_access_switch
-    - device_roles_core_distribution_switch
+  hosts: platforms_cisco-ios
   gather_facts: no
   become: yes
   become_method: enable
@@ -56,4 +54,5 @@
     - name: "Display Rollback Changes"
       debug:
         var: rollback_result.updates
+
 
