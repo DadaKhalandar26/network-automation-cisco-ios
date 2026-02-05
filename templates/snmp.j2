@@ -5,19 +5,19 @@ snmp-server view {{ snmp_view }} iso included
 
 ! --- Configure SNMP Group ---
 {% if 'device_roles_user_access_switch' in group_names %}
- ! Access Switches (Simplified Syntax - No Views)
+ ! Access Switches (Auth No Priv - Simplified)
  snmp-server group {{ snmp_group_name }} v3 auth
 {% else %}
- ! Core Switches (Full Syntax - With Views)
+ ! Core Switches (Priv + View)
  snmp-server group {{ snmp_group_name }} v3 priv read {{ snmp_view }}
 {% endif %}
 
-! --- Configure SNMP User (Common to All) ---
+! --- Configure SNMP User ---
 {% if 'device_roles_user_access_switch' in group_names %}
- ! Access Switches (Simplified Syntax - No Views)
+ ! Access Switches (Auth Only - No Priv Key)
  snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3 auth {{ snmp_auth_algo }} {{ snmp_auth_key }}
 {% else %}
- ! Core Switches (Full Syntax - With Views)
+ ! Core Switches (Auth + Priv Keys)
  snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3 auth {{ snmp_auth_algo }} {{ snmp_auth_key }} priv {{ snmp_priv_algo }} {{ snmp_priv_key }}
 {% endif %}
 
@@ -41,13 +41,16 @@ snmp-server enable traps snmp
 
 ! --- Configure NMS Hosts ---
 {% if 'device_roles_user_access_switch' in group_names %}
+ ! Access Switches (Send Traps using Auth level)
  {% for host in nms_hosts %}
-  snmp-server host {{ host }} version 3 priv {{ snmp_user }}
- {% else %}
- {% for host in nms_hosts %}
-  snmp-server host {{ host }} version 3 priv {{ snmp_user }}
+ snmp-server host {{ host }} version 3 auth {{ snmp_user }}
  {% endfor %}
-{% endfor %}
+{% else %}
+ ! Core Switches (Send Traps using Priv level)
+ {% for host in nms_hosts %}
+ snmp-server host {{ host }} version 3 priv {{ snmp_user }}
+ {% endfor %}
+{% endif %}
 
 ! --- System Info ---
 snmp-server contact {{ snmp_contact }}
