@@ -1,9 +1,6 @@
 {% for iface in interface_list %}
 {#- --- Define Safety Conditions --- #}
-{#- CORE: Protect Ethernet0/0 -#}
 {%- set is_core_protected = ('device_roles_core_distribution_switch' in group_names and iface.name == 'Ethernet0/0') -%}
-
-{#- ACCESS: Protect vlan 10 AND Ethernet0/0 -#}
 {%- set is_access_protected = ('device_roles_user_access_switch' in group_names and iface.name in ['vlan 10', 'Ethernet0/0']) -%}
 
 {#- --- ONLY Generate Config if the interface is NOT Protected --- #}
@@ -13,11 +10,11 @@
 {%- if 'vlan' in iface.name | lower %}
 no interface {{ iface.name }}
 {%- else %}
-
 {#- Logic for Physical Interfaces #}
 default interface {{ iface.name }}
 interface {{ iface.name }}
  shutdown
-{%- endif %}
-{%- endif %}
+{% endif %}
+
+{% endif %}
 {% endfor %}
