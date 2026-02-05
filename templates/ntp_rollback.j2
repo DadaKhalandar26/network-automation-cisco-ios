@@ -1,8 +1,15 @@
-! ... [Remove Servers] ...
+! --- Remove NTP Servers ---
+{% for server in ntp_servers %}
+no ntp server {{ server }}
+{% endfor %}
 
-! Remove NTP Source
-{% if source_interface is defined %}
+! --- Remove NTP Source ---
+{% if ntp_source_interface is defined %}
 no ntp source {{ source_interface }}
 {% endif %}
 
-! ... [Remove Timezone] ...
+! --- Remove Timezone ---
+no clock timezone {{ timezone_name }}
+
+! --- Disable Calendar Update ---
+no ntp update-calendar
