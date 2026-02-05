@@ -1,0 +1,33 @@
+---
+- name: MANUAL ROLLBACK - Remove SNMP Configuration
+  hosts: platforms_cisco-ios
+  gather_facts: no
+  become: yes
+  become_method: enable
+
+  vars_files:
+    - "{{ playbook_dir }}/../../group_vars/all.yml"
+    - "{{ playbook_dir }}/../../host_vars/{{ inventory_hostname }}.yml"
+
+  vars:
+    perform_rollback: no
+
+  pre_tasks:
+    - name: "Safety Check"
+      fail:
+        msg: "YOU MUST PASS '-e perform_rollback=yes' TO RUN THIS DESTRUCTIVE PLAYBOOK."
+      when: not perform_rollback
+
+  tasks:
+    - name: "Revert SNMP Configuration"
+      cisco.ios.ios_config:
+        src: "../templates/snmp_rollback.j2"
+      register: rollback_result
+
+    - name: "Display Rollback Changes"
+      debug:
+        var: rollback_result.updates
+
+    - name: "Save Configuration"
+      cisco.ios.ios_config:
+        save_when: modified
