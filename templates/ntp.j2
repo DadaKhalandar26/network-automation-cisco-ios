@@ -1,0 +1,8 @@
+! ... [Timezone Config] ...
+
+! Configure NTP Source (Using Generic Variable)
+{% if source_interface is defined %}
+ntp source {{ source_interface }}
+{% endif %}
+
+! ... [Server Config] ...
