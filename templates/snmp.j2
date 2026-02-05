@@ -1,23 +1,35 @@
+! Configure SNMP View
 snmp-server view {{ snmp_view }} iso included
-snmp-server group {{ snmp_group_name }} v3 priv read {{ snmp_view }}
-snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3 auth {{ snmp_auth_algo }} {{ snmp_auth_key }} priv {{ snmp_priv_algo }} {{ snmp_priv_key }} 
 
+! Configure SNMP Group
+snmp-server group {{ snmp_group_name }} v3 priv read {{ snmp_view }}
+
+! Configure SNMP User
+snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3 auth {{ snmp_auth_algo }} {{ snmp_auth_key }} priv {{ snmp_priv_algo }} {{ snmp_priv_key }}
+
+! Configure Access List for SNMP
 ip access-list standard {{ snmp_acl }}
- permit 10.10.40.0 0.0.0.255
+ {% for net in snmp_allowed_networks %}
+ permit {{ net }}
+ {% endfor %}
  deny any log
  exit
 
+! Configure Communities
 snmp-server community public RO {{ snmp_acl }}
 snmp-server community private RW {{ snmp_acl }}
 
+! Enable Traps
 snmp-server enable traps syslog
 snmp-server enable traps ospf
 snmp-server enable traps ethernet evc
 snmp-server enable traps snmp
 
+! Configure NMS Hosts
 {% for host in nms_hosts %}
 snmp-server host {{ host }} version 3 priv {{ snmp_user }}
 {% endfor %}
 
+! System Contact Information
 snmp-server contact {{ snmp_contact }}
 snmp-server location {{ snmp_location }}
