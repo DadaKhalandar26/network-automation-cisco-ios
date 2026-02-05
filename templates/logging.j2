@@ -1,5 +1,28 @@
-{% for loghost in logging_hosts %}
-logging host {{ loghost }}
-{% endfor %}
-logging trap informational
+! Enable accurate timestamps (Critical for troubleshooting)
+service timestamps debug datetime msec
+service timestamps log datetime msec
+
+! Configure Local Buffer (RAM) to prevent log loss
+logging buffered 4090 debugging
+
+! Limit Console output to save CPU (Critical errors only)
+logging console critical
+
+! Limit VTY (SSH) output
+logging monitor errors
+
+! Set Source Interface
+{% if logging_source_interface is defined %}
 logging source-interface {{ logging_source_interface }}
+{% endif %}
+
+! Configure Syslog Servers
+{% if logging_hosts is defined %}
+ {% for loghost in logging_hosts %}
+ logging host {{ loghost }}
+ {% endfor %}
+{% endif %}
+
+! Set Trap Level and Enable Logging
+logging trap informational
+logging on
