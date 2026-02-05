@@ -18,6 +18,7 @@
         - vlans is defined
         - item.id != 10
       register: rollback_result
+      
 
     - name: Verify Rollback (Show VLAN Brief)
       cisco.ios.ios_command:
@@ -28,3 +29,8 @@
     - name: Display Verification
       debug:
         var: verify_output.stdout_lines
+
+    - name: Save Configuration
+      cisco.ios.ios_config:
+        save_when: modified
+
