@@ -35,3 +35,7 @@
 - name: Display VLAN verification output
   ansible.builtin.debug:
     var: vlan_show.stdout_lines
+
+- name: "Save Running Config to Startup Config"
+  cisco.ios.ios_config:
+    save_when: modified
