@@ -23,6 +23,7 @@ snmp_allowed_networks:
 # Your internal NTP Servers (AD Controllers or Dedicated NTP)
 ntp_servers:
   - 192.168.29.1
+  - 10.10.100.1
 # Timezone Settings (IST = GMT +5:30)
 timezone_name: "IST"
 timezone_offset_hours: 5
