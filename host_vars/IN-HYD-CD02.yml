@@ -6,4 +6,4 @@ ansible_command_timeout: 120
 ansible_timeout: 60
 ansible_port: 22
 snmp_location: "Hyderabad"
-logging_source_interface: E0/0
+source_interface: E0/0
