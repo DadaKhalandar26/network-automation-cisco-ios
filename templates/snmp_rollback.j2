@@ -1,26 +1,39 @@
-! Remove NMS Hosts
-{% for host in nms_hosts %}
-no snmp-server host {{ host }} version 3 priv {{ snmp_user }}
-{% endfor %}
+! --- Remove NMS Hosts (Trap Destinations) ---
+{% if 'device_roles_user_access_switch' in group_names %}
+ ! Access Switches (Remove Auth Hosts)
+ {% for host in nms_hosts %}
+ no snmp-server host {{ host }} version 3 auth {{ snmp_user }}
+ {% endfor %}
+{% else %}
+ ! Core Switches (Remove Priv Hosts)
+ {% for host in nms_hosts %}
+ no snmp-server host {{ host }} version 3 priv {{ snmp_user }}
+ {% endfor %}
+{% endif %}
 
-! Disable Traps
+! --- Disable Traps ---
 no snmp-server enable traps syslog
 no snmp-server enable traps ospf
 no snmp-server enable traps ethernet evc
 no snmp-server enable traps snmp
 
-! Remove Communities
+! --- Remove Communities ---
 no snmp-server community public RO {{ snmp_acl }}
 no snmp-server community private RW {{ snmp_acl }}
 
-! Remove User, Group, and View
+! --- Remove User and Group ---
+! (Removing the user and group usually doesn't require specifying auth/priv keywords)
 no snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3
-no snmp-server group {{ snmp_group_name }} v3 priv
-no snmp-server view {{ snmp_view }}
+no snmp-server group {{ snmp_group_name }} v3
 
-! Remove ACL
+! --- Remove Custom View (Core Only) ---
+{% if 'device_roles_core_distribution_switch' in group_names %}
+no snmp-server view {{ snmp_view }}
+{% endif %}
+
+! --- Remove ACL ---
 no ip access-list standard {{ snmp_acl }}
 
-! Reset Contact and Location
+! --- Reset System Info ---
 no snmp-server contact
 no snmp-server location
