@@ -1,0 +1,8 @@
+! ... [Remove Servers] ...
+
+! Remove NTP Source
+{% if source_interface is defined %}
+no ntp source {{ source_interface }}
+{% endif %}
+
+! ... [Remove Timezone] ...
