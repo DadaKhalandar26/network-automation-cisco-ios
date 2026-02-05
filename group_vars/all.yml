@@ -17,6 +17,8 @@ nms_hosts:
 logging_hosts:
   - 10.10.30.50
   - 10.10.30.51
+snmp_allowed_networks:
+  - 10.10.40.0 0.0.0.255
 
 # Security Timers (Seconds)
 site_auth_reauth_timer: 1000      # How often to re-check auth
