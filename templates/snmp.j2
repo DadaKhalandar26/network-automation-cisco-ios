@@ -1,13 +1,21 @@
-! Configure SNMP View
+! --- CORE SWITCHES: Configure Custom View ---
+{% if 'device_roles_core_distribution_switch' in group_names %}
 snmp-server view {{ snmp_view }} iso included
+{% endif %}
 
-! Configure SNMP Group
-snmp-server group {{ snmp_group_name }} v3 priv read {{ snmp_view }}
+! --- Configure SNMP Group ---
+{% if 'device_roles_user_access_switch' in group_names %}
+ ! Access Switches (Simplified Syntax - No Views)
+ snmp-server group {{ snmp_group_name }} v3 priv
+{% else %}
+ ! Core Switches (Full Syntax - With Views)
+ snmp-server group {{ snmp_group_name }} v3 priv read {{ snmp_view }}
+{% endif %}
 
-! Configure SNMP User
+! --- Configure SNMP User (Common to All) ---
 snmp-server user {{ snmp_user }} {{ snmp_group_name }} v3 auth {{ snmp_auth_algo }} {{ snmp_auth_key }} priv {{ snmp_priv_algo }} {{ snmp_priv_key }}
 
-! Configure Access List for SNMP
+! --- Configure Access List ---
 ip access-list standard {{ snmp_acl }}
  {% for net in snmp_allowed_networks %}
  permit {{ net }}
@@ -15,21 +23,21 @@ ip access-list standard {{ snmp_acl }}
  deny any log
  exit
 
-! Configure Communities
+! --- Configure Communities ---
 snmp-server community public RO {{ snmp_acl }}
 snmp-server community private RW {{ snmp_acl }}
 
-! Enable Traps
+! --- Enable Traps ---
 snmp-server enable traps syslog
 snmp-server enable traps ospf
 snmp-server enable traps ethernet evc
 snmp-server enable traps snmp
 
-! Configure NMS Hosts
+! --- Configure NMS Hosts ---
 {% for host in nms_hosts %}
 snmp-server host {{ host }} version 3 priv {{ snmp_user }}
 {% endfor %}
 
-! System Contact Information
+! --- System Info ---
 snmp-server contact {{ snmp_contact }}
 snmp-server location {{ snmp_location }}
