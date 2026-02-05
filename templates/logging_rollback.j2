@@ -1,0 +1,24 @@
+! Remove Syslog Servers
+{% if logging_hosts is defined %}
+ {% for loghost in logging_hosts %}
+ no logging host {{ loghost }}
+ {% endfor %}
+{% endif %}
+
+! Remove Source Interface
+{% if logging_source_interface is defined %}
+no logging source-interface {{ logging_source_interface }}
+{% endif %}
+
+! Reset Timestamps to Default
+default service timestamps debug
+default service timestamps log
+
+! Reset Logging Buffer and Console Levels
+default logging buffered
+default logging console
+default logging monitor
+default logging trap
+
+! Disable Global Logging (Optional - uncomment if you want logging completely OFF)
+! no logging on
