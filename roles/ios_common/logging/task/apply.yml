@@ -1,4 +1,0 @@
----
-- name: Configure logging
-  ios_config:
-    lines: "{{ lookup('template', playbook_dir + '/../../templates/logging.j2') | split('\n') }}"
